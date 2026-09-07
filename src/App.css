@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+#root {
+  width: 100%;
+}
+
+:root {
+  font-size: 16px;
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #1a1a1a;
+  background: #fff;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+img[loading="lazy"] {
+  content-visibility: auto;
+}
+
+::selection {
+  background-color: rgba(139, 69, 19, 0.12);
+  color: #3d1e08;
+}
+
+/* Skip to content — accessibility */
+.skip-link {
+  position: absolute;
+  top: -3rem;
+  left: 1rem;
+  background: #6d3a1f;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 0 0 0.5rem 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  z-index: 100;
+  text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-link:focus {
+  top: 0;
+}
+
+/* Glass - lightweight (no heavy blur on all) */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.glass-dark {
+  background: rgba(26, 14, 5, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Only apply blur on capable devices with hover (desktop) */
+@media (hover: hover) {
+  .glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.55);
+  }
+  .glass-dark {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    background: rgba(26, 14, 5, 0.5);
+  }
+}
+
+.section-container {
+  width: 100%;
+  max-width: 82rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 640px) {
+  .section-container {
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .section-container {
+    padding-left: 3.5rem;
+    padding-right: 3.5rem;
+  }
+}
