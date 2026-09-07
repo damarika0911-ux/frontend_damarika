@@ -1,12 +1,13 @@
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import CloseIcon from "@mui/icons-material/Close";
+import CollectionsIcon from "@mui/icons-material/Collections";
+import PlaceIcon from "@mui/icons-material/Place";
+import IconButton from "@mui/material/IconButton";
+import { AnimatePresence, m } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
-import { m, AnimatePresence } from "framer-motion";
 import placeholderIcon from "../../assets/placeholder.svg";
 import { getArchaeologicalSites, getDistrictData } from "../../service/apiService";
-import CloseIcon from "@mui/icons-material/Close";
-import PlaceIcon from "@mui/icons-material/Place";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import CollectionsIcon from "@mui/icons-material/Collections";
-import IconButton from "@mui/material/IconButton";
+import { parseImageUrl } from "../../utils/config";
 import { districts } from "./districtPaths";
 
 type HeritageType = "cultural" | "natural" | "mixed";
@@ -31,6 +32,19 @@ interface DistrictInfo {
   notablePlaces: string[];
   center: { x: number; y: number };
 }
+
+const normalizeSite = (site: any): ArchaeologicalSite => ({
+  ...site,
+  id: Number(site.id),
+  type: site.type === "natural" || site.type === "mixed" ? site.type : "cultural",
+  image: parseImageUrl(site.image),
+  images: Array.isArray(site.images) ? site.images.map(parseImageUrl).filter(Boolean) : [],
+  district: String(site.district || "Unknown district"),
+  location: {
+    x: Number(site.location?.x ?? site.centerX) || 0,
+    y: Number(site.location?.y ?? site.centerY) || 0,
+  },
+});
 
 const typeConfig: Record<HeritageType, { color: string; glow: string; label: string }> = {
   cultural: { color: "#EF4444", glow: "#EF444480", label: "Cultural" },
@@ -67,7 +81,9 @@ export const TamilnaduMap = () => {
     (async () => {
       try {
         const response: any = await getArchaeologicalSites();
-        if (response.success) setArchaeologicalSites(response.data);
+        if (response.success && Array.isArray(response.data)) {
+          setArchaeologicalSites(response.data.map(normalizeSite));
+        }
       } catch (err) { console.error(err); }
     })();
     (async () => {
@@ -76,7 +92,14 @@ export const TamilnaduMap = () => {
         if (response.success) {
           const map: Record<string, DistrictInfo> = {};
           response.data.forEach((d: DistrictInfo) => {
-            map[d.name.toLowerCase().replace(/\s+/g, "")] = d;
+            map[d.name.toLowerCase().replace(/\s+/g, "")] = {
+              ...d,
+              images: Array.isArray(d.images) ? d.images.map(parseImageUrl).filter(Boolean) : [],
+              center: {
+                x: Number(d.center?.x) || 0,
+                y: Number(d.center?.y) || 0,
+              },
+            };
           });
           setDistrictInfoMap(map);
         }

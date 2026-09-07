@@ -1,16 +1,16 @@
-import { m } from "framer-motion";
-import { useEffect, useState } from "react";
-import { Badge } from "../components/common-components/Badge";
-import PageWrapper from "../components/common-components/PageWrapper";
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import GroupIcon from "@mui/icons-material/Group";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
-import { useAppStore } from "../store/appStore";
+import { m } from "framer-motion";
+import { useEffect, useState } from "react";
 import placeholderIcon from "../assets/placeholder.svg";
+import { Badge } from "../components/common-components/Badge";
+import PageWrapper from "../components/common-components/PageWrapper";
 import { getPrograms } from "../service/apiService";
+import { useAppStore } from "../store/appStore";
 
 const fadeUp = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-50px" } };
 const del = (i: number) => ({ duration: 0.5, delay: i * 0.1, ease: "easeOut" as const });
@@ -23,11 +23,16 @@ const ProgramsPage: React.FC = () => {
   const setActiveProgramId = useAppStore((s) => s.setActiveProgramId);
   const id = useAppStore((s) => s.activeProgramId) ?? programs[0]?.id ?? 1;
   const otherPrograms = programs;
-  const sel = id ? programs.find((p) => p.id === Number(id)) : null;
+  const sel = id ? programs.find((p) => Number(p.id) === Number(id)) : null;
 
   useEffect(() => {
     (async () => {
-      try { setLoading(true); const r = await getPrograms(); if (r.success) setProgramDetails(r.data); else setError("Failed"); } catch { setError("Error"); } finally { setLoading(false); }
+      try {
+        setLoading(true);
+        const r = await getPrograms();
+        if (r.success && Array.isArray(r.data)) setProgramDetails(r.data);
+        else setError("Failed to load programs");
+      } catch { setError("Error fetching programs"); } finally { setLoading(false); }
     })();
   }, []);
 

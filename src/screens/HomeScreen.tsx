@@ -13,17 +13,17 @@ import { useNavigate } from "react-router-dom";
 import placeholderIcon from "../assets/placeholder.svg";
 import wallpaper from "../assets/walpaper.png";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardTitle,
+    Card,
+    CardContent,
+    CardDescription,
+    CardTitle,
 } from "../components/common-components/Card";
 import PageWrapper from "../components/common-components/PageWrapper";
 import { TamilnaduMap } from "../components/tamilnadu-map/TamilnaduSvg";
 import { getPeopleData, getPrograms } from "../service/apiService";
 import { useAppStore } from "../store/appStore";
-import { InlineSkeleton } from "./Loader";
 import { useLocalStore } from "../store/localStore";
+import { InlineSkeleton } from "./Loader";
 
 const services = [
   {
@@ -385,8 +385,8 @@ const HomeScreen = () => {
                     <Card
                       className="h-full group overflow-hidden program-card"
                       onClick={() => {
-                        navigate("/programs");
                         useAppStore.getState().setActiveProgramId(p.id);
+                        navigate("/programs");
                       }}
                     >
                       <div className="program-image">
