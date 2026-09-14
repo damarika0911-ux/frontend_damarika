@@ -1,4 +1,20 @@
-# React + TypeScript + Vite
+# Damarika frontend
+
+The app starts a shared `GET /health` request against the configured API origin
+before rendering React. Rendering continues immediately; API data requests wait
+for health to report `{ "success": true, "database": "ready" }`, then run
+concurrently. The health request allows up to 90 seconds for a Render cold start;
+normal requests retain their 15-second timeout.
+
+After 14 minutes without successful API activity, the next request checks health
+again. There is no background keep-alive interval. A failed check rejects waiting
+requests and allows the next request to try again. This starts the backend earlier
+but does not eliminate the free hosting cold-start delay.
+
+Run readiness checks with Node.js 22.18+ or 23.6+:
+`node --test tests/apiReadiness.test.mjs`. Build with `npm run build`.
+
+## React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

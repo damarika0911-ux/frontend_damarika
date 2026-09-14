@@ -1,5 +1,23 @@
 import axios from "axios";
 import { DAMARIKA_API_HOST, parseImageUrl } from "../utils/config";
+import { createApiReadiness } from "./apiReadiness";
+
+const readiness = createApiReadiness(async () => {
+  try {
+    // Use a separate request to avoid waiting on our own request interceptor.
+    const response = await axios.get(
+      new URL("/health", new URL(DAMARIKA_API_HOST, window.location.origin)).href,
+      { timeout: 90000, params: { _: Date.now() } },
+    );
+    if (response.data?.success !== true || response.data?.database !== "ready") {
+      throw new Error("API is not ready");
+    }
+  } catch {
+    throw new Error("Unable to connect right now. Please try again shortly.");
+  }
+});
+
+export const warmUpApi = readiness.waitUntilReady;
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -13,9 +31,15 @@ const api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
+api.interceptors.request.use(async (config) => {
+  await warmUpApi();
+  return config;
+});
+
 // Response interceptor — extract data, clean image URLs, handle errors
 api.interceptors.response.use(
   (response) => {
+    readiness.markActivity();
     const body = response.data;
     // Clean image fields in array responses
     if (body?.data && Array.isArray(body.data)) {
