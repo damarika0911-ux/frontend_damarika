@@ -1,7 +1,9 @@
 import { m } from "framer-motion";
 import placeholderIcon from "../assets/placeholder.svg";
 import PageWrapper from "../components/common-components/PageWrapper";
-import { useLocalStore, type SocialLink } from "../store/localStore";
+import { type SocialLink } from "../store/localStore";
+import { useQuery } from "@tanstack/react-query";
+import { peopleQuery } from "../service/queries";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -61,7 +63,7 @@ const values = [
 ];
 
 const AboutPage = () => {
-  const teamMembers = useLocalStore((s) => s.peopleData);
+  const { data: teamMembers = [], isPending, error } = useQuery(peopleQuery);
 
   return (
     <PageWrapper
@@ -199,6 +201,8 @@ const AboutPage = () => {
               our department head Mr. V. Selvakumar.
             </p>
           </m.div>
+          {isPending && <p role="status">Loading our team...</p>}
+          {error && !teamMembers.length && <p role="alert">{error.message}</p>}
           <div className="ab-team-grid">
             {teamMembers.length > 0 &&
               teamMembers.map((member, i) => (

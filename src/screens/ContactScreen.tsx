@@ -15,6 +15,7 @@ import { Input } from "../components/common-components/Input";
 import { Label } from "../components/common-components/Label";
 import { Textarea } from "../components/common-components/Textarea";
 import PageWrapper from "../components/common-components/PageWrapper";
+import { useMutation } from "@tanstack/react-query";
 import { postContactForm } from "../service/apiService";
 import { handleApiError } from "../utils/helpherFunction";
 
@@ -24,7 +25,7 @@ const del = (i: number) => ({ duration: 0.4, delay: i * 0.08, ease: "easeOut" as
 export default function ContactPage() {
   const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", subject: "", message: "" });
   const [errors, setErrors] = useState({ firstName: "", email: "", message: "" });
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { mutateAsync: submitContact, isPending: isSubmitting } = useMutation({ mutationFn: postContactForm, retry: false });
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -44,13 +45,12 @@ export default function ContactPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return;
-    setIsSubmitting(true);
+    if (isSubmitting || !validateForm()) return;
     try {
-      const res = await postContactForm(formData);
+      const res = await submitContact(formData);
       if (res.success) { setSubmitSuccess(true); setFormData({ firstName: "", lastName: "", email: "", subject: "", message: "" }); setTimeout(() => setSubmitSuccess(false), 5000); }
       toast.success("Form submitted successfully");
-    } catch (error) { handleApiError(error); } finally { setIsSubmitting(false); }
+    } catch (error) { handleApiError(error); }
   };
 
   return (

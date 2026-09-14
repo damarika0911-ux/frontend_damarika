@@ -20,9 +20,9 @@ import {
 } from "../components/common-components/Card";
 import PageWrapper from "../components/common-components/PageWrapper";
 import { TamilnaduMap } from "../components/tamilnadu-map/TamilnaduSvg";
-import { getPeopleData, getPrograms } from "../service/apiService";
+import { useQuery } from "@tanstack/react-query";
+import { programsQuery } from "../service/queries";
 import { useAppStore } from "../store/appStore";
-import { useLocalStore } from "../store/localStore";
 import { InlineSkeleton } from "./Loader";
 
 const services = [
@@ -136,32 +136,8 @@ const delay = (i: number) => ({
 
 const HomeScreen = () => {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const setProgramDetails = useAppStore((s) => s.setProgramDetails);
-  const programs = useAppStore((s) => s.programDetails);
-  const setPeopleData = useLocalStore((s) => s.setPeopleData);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const r = await getPrograms();
-        if (r.success) setProgramDetails(r.data);
-        else setError("Failed");
-      } catch {
-        setError("Error fetching programs");
-      } finally {
-        setLoading(false);
-      }
-    })();
-    (async () => {
-      try {
-        const r = await getPeopleData();
-        if (r.success) setPeopleData(r.data);
-      } catch {}
-    })();
-  }, []);
+  const { data: programs = [], isPending: loading, error: queryError } = useQuery(programsQuery);
+  const error = programs.length ? null : queryError?.message;
 
   const displayPrograms = programs.slice(0, 3);
   const go = (r: string) => navigate(`/${r}`);

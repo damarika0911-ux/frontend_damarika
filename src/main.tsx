@@ -4,6 +4,8 @@ import { BrowserRouter } from "react-router-dom";
 import { LazyMotion } from "framer-motion";
 import ErrorBoundary from "./error/ErrorBoundary.tsx";
 import { ToastContainer } from "react-toastify";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { queryClient } from "./service/queryClient";
 import { warmUpApi } from "./service/apiService";
 
 import "./index.css";
@@ -18,12 +20,14 @@ const lazyAnimationFeatures = () =>
 void warmUpApi().catch(() => {});
 
 createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
-    <LazyMotion strict features={lazyAnimationFeatures}>
-      <ErrorBoundary>
-        <App />
-        <ToastContainer pauseOnFocusLoss={false} />
-      </ErrorBoundary>
-    </LazyMotion>
-  </BrowserRouter>
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
+      <LazyMotion strict features={lazyAnimationFeatures}>
+        <ErrorBoundary>
+          <App />
+          <ToastContainer pauseOnFocusLoss={false} />
+        </ErrorBoundary>
+      </LazyMotion>
+    </BrowserRouter>
+  </QueryClientProvider>
 );

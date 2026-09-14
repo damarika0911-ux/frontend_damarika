@@ -6,7 +6,8 @@ import IconButton from "@mui/material/IconButton";
 import { AnimatePresence, m } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import placeholderIcon from "../../assets/placeholder.svg";
-import { getArchaeologicalSites, getDistrictData } from "../../service/apiService";
+import { useQuery } from "@tanstack/react-query";
+import { sitesQuery, districtsQuery } from "../../service/queries";
 import { parseImageUrl } from "../../utils/config";
 import { districts } from "./districtPaths";
 
@@ -59,8 +60,20 @@ export const TamilnaduMap = () => {
   const [selectedDistrict, setSelectedDistrict] = useState<DistrictInfo | null>(null);
   const [hoveredDistrict, setHoveredDistrict] = useState<string | null>(null);
   const [hoveredSite, setHoveredSite] = useState<number | null>(null);
-  const [archaeologicalSites, setArchaeologicalSites] = useState<ArchaeologicalSite[]>([]);
-  const [districtInfoMap, setDistrictInfoMap] = useState<Record<string, DistrictInfo>>({});
+  const sites = useQuery(sitesQuery);
+  const districtData = useQuery(districtsQuery);
+  const archaeologicalSites = useMemo(() => (sites.data || []).map(normalizeSite), [sites.data]);
+  const districtInfoMap = useMemo(() => {
+    const map: Record<string, DistrictInfo> = {};
+    (districtData.data || []).forEach((d: DistrictInfo) => {
+      map[d.name.toLowerCase().replace(/\s+/g, "")] = {
+        ...d,
+        images: Array.isArray(d.images) ? d.images.map(parseImageUrl).filter(Boolean) : [],
+        center: { x: Number(d.center?.x) || 0, y: Number(d.center?.y) || 0 },
+      };
+    });
+    return map;
+  }, [districtData.data]);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
 
   // Auto-scroll gallery images every 3 seconds
@@ -76,36 +89,6 @@ export const TamilnaduMap = () => {
     }, 3000);
     return () => clearInterval(timer);
   }, [selectedSite?.id, selectedDistrict?.id, selectedSite?.images, selectedDistrict?.images]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const response: any = await getArchaeologicalSites();
-        if (response.success && Array.isArray(response.data)) {
-          setArchaeologicalSites(response.data.map(normalizeSite));
-        }
-      } catch (err) { console.error(err); }
-    })();
-    (async () => {
-      try {
-        const response: any = await getDistrictData();
-        if (response.success) {
-          const map: Record<string, DistrictInfo> = {};
-          response.data.forEach((d: DistrictInfo) => {
-            map[d.name.toLowerCase().replace(/\s+/g, "")] = {
-              ...d,
-              images: Array.isArray(d.images) ? d.images.map(parseImageUrl).filter(Boolean) : [],
-              center: {
-                x: Number(d.center?.x) || 0,
-                y: Number(d.center?.y) || 0,
-              },
-            };
-          });
-          setDistrictInfoMap(map);
-        }
-      } catch (err) { console.error(err); }
-    })();
-  }, []);
 
   const sitePositions = useMemo(() => {
     const count: Record<string, number> = {};
@@ -144,6 +127,10 @@ export const TamilnaduMap = () => {
 
   return (
     <>
+      {(sites.isPending || districtData.isPending) && <p role="status">Loading heritage details...</p>}
+      {(sites.error || districtData.error) && (
+        <p role="alert">Some heritage details could not be refreshed. Please try again shortly.</p>
+      )}
       <div className="tn-map-layout">
         {/* Left: Map */}
         <div className="tn-map-col">

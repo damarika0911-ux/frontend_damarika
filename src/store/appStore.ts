@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-interface Program {
+export interface Program {
   id: number;
   title: string;
   image: string;
@@ -20,7 +20,7 @@ interface Program {
   updatedAt: string;
 }
 
-type Product = {
+export type Product = {
   id: number;
   title: string;
   description: string;
@@ -36,20 +36,12 @@ type Product = {
   link?: string;
 };
 
+// Only local UI selection lives in Zustand; server data belongs to TanStack Query.
 type TAppState = {
   activeProgramId: number | null;
-  programDetails: Program[];
-  productDetails: Product[];
-  setProgramDetails: (payload: Program[]) => void;
   setActiveProgramId: (payload: number) => void;
-  setProductDetails: (payload: Product[]) => void;
 };
-
 export const useAppStore = create<TAppState>()((set) => ({
-  programDetails: [],
-  productDetails: [],
   activeProgramId: null,
-  setProductDetails: (payload) => set({ productDetails: payload }),
-  setProgramDetails: (payload) => set({ programDetails: payload }),
   setActiveProgramId: (payload) => set({ activeProgramId: payload }),
 }));

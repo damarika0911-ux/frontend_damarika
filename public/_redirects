@@ -1,1 +1,2 @@
-/*    /index.html   200
+# No custom redirects. React routes use the native SPA fallback in wrangler.jsonc.
+# Do not add a catch-all rewrite to /index.html; Cloudflare rejects it as a loop.

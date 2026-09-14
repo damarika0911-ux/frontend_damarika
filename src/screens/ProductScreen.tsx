@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useQuery } from "@tanstack/react-query";
+import { productsQuery } from "../service/queries";
 import { m } from "framer-motion";
 import { Card, CardContent, CardFooter } from "../components/common-components/Card";
 import { ActionButton as Button } from "../components/common-components/Button";
@@ -6,25 +8,15 @@ import { Badge } from "../components/common-components/Badge";
 import PageWrapper from "../components/common-components/PageWrapper";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import placeholderIcon from "../assets/placeholder.svg";
-import { useAppStore } from "../store/appStore";
 import { InlineSkeleton } from "./Loader";
-import { getProducts } from "../service/apiService";
 import toolsIcon from "../assets/tools.jpeg";
 
 const fadeUp = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-50px" } };
 const delay = (i: number) => ({ duration: 0.5, delay: i * 0.1, ease: "easeOut" as const });
 
 const ProductsPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const setProductDetails = useAppStore((s) => s.setProductDetails);
-  const products = useAppStore((s) => s.productDetails);
-
-  useEffect(() => {
-    (async () => {
-      try { setLoading(true); const r = await getProducts(); if (r.success) setProductDetails(r.data); else setError("Failed"); } catch { setError("Error"); } finally { setLoading(false); }
-    })();
-  }, []);
+  const { data: products = [], isPending: loading, error: queryError } = useQuery(productsQuery);
+  const error = products.length ? null : queryError?.message;
 
   return (
     <PageWrapper title="Archaeological Tools" description="Shop handmade arts and professional-grade archaeological tools — excavation equipment, soil analysis tools, preservation kits, and miniature tools for fieldwork." keywords="archaeological tools, excavation equipment, archaeology supplies, handmade arts, field tools, preservation tools" path="/products" jsonLd={{ "@context": "https://schema.org", "@type": "CollectionPage", "name": "Damarika Archaeological Tools", "url": "https://www.damarika.in/products" }}>

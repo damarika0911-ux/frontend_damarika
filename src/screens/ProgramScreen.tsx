@@ -5,36 +5,23 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import GroupIcon from "@mui/icons-material/Group";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { m } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { programsQuery } from "../service/queries";
 import placeholderIcon from "../assets/placeholder.svg";
 import { Badge } from "../components/common-components/Badge";
 import PageWrapper from "../components/common-components/PageWrapper";
-import { getPrograms } from "../service/apiService";
 import { useAppStore } from "../store/appStore";
 
 const fadeUp = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-50px" } };
 const del = (i: number) => ({ duration: 0.5, delay: i * 0.1, ease: "easeOut" as const });
 
 const ProgramsPage: React.FC = () => {
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const setProgramDetails = useAppStore((s) => s.setProgramDetails);
-  const programs = useAppStore((s) => s.programDetails);
+  const { data: programs = [], isPending: loading, error: queryError } = useQuery(programsQuery);
+  const error = programs.length ? null : queryError?.message;
   const setActiveProgramId = useAppStore((s) => s.setActiveProgramId);
   const id = useAppStore((s) => s.activeProgramId) ?? programs[0]?.id ?? 1;
   const otherPrograms = programs;
   const sel = id ? programs.find((p) => Number(p.id) === Number(id)) : null;
-
-  useEffect(() => {
-    (async () => {
-      try {
-        setLoading(true);
-        const r = await getPrograms();
-        if (r.success && Array.isArray(r.data)) setProgramDetails(r.data);
-        else setError("Failed to load programs");
-      } catch { setError("Error fetching programs"); } finally { setLoading(false); }
-    })();
-  }, []);
 
   if (loading) return (
     <div className="pg-skeleton-page">
