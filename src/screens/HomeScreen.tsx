@@ -67,6 +67,7 @@ const contactInfo = [
 ];
 
 const stats = [
+  { target: 2, suffix: "+ Years", label: "of Damarika" },
   { target: 45, suffix: "+", label: "Programs Conducted" },
   { target: 1000, suffix: "+", label: "Students Trained" },
   { target: 37, suffix: "", label: "Districts Mapped" },
@@ -188,14 +189,6 @@ const HomeScreen = () => {
         <div className="hero-overlay" />
 
         <div className="section-container hero-content">
-          <div className="anniversary-badge">
-            <span className="anniversary-number" aria-hidden="true">2</span>
-            <p className="anniversary-text">
-              <span className="anniversary-label">Celebrating</span>
-              <span className="anniversary-title">2 Years of Damarika</span>
-            </p>
-          </div>
-
           <m.p
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
@@ -526,17 +519,12 @@ const HomeScreen = () => {
         .hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.25; }
         .hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(15,9,6,0.9) 0%, rgba(61,30,8,0.7) 50%, rgba(139,69,19,0.5) 100%); }
         .hero-content { position: relative; z-index: 1; width: 100%; max-width: 44rem; }
-        .anniversary-badge { display: inline-flex; align-items: center; gap: 0.75rem; max-width: 100%; padding: 0.625rem 1rem 0.625rem 0.625rem; margin-bottom: 1.5rem; border: 1px solid rgba(205,133,63,0.45); border-radius: 1rem; background: rgba(205,133,63,0.1); font-family: 'DM Sans', sans-serif; }
-        .anniversary-number { display: grid; place-items: center; flex-shrink: 0; width: 2.75rem; height: 2.75rem; border-radius: 50%; background: #cd853f; color: #1a0e05; font-size: 1.75rem; font-weight: 800; line-height: 1; }
-        .anniversary-text { display: flex; flex-direction: column; gap: 0.125rem; margin: 0; }
-        .anniversary-label { color: #e5b887; font-size: 0.625rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; }
-        .anniversary-title { color: #fff; font-size: clamp(0.875rem, 3vw, 1rem); font-weight: 700; line-height: 1.4; }
         .hero-label { font-size: 0.6875rem; font-weight: 600; font-family: 'DM Sans', sans-serif; color: #cd853f; letter-spacing: 0.25em; text-transform: uppercase; margin-bottom: 1rem; }
         .hero-title { font-size: clamp(1.75rem, 6vw, 3.75rem); font-weight: 700; color: #fff; line-height: 1.1; margin-bottom: 1rem; letter-spacing: -0.02em; }
         .hero-desc { font-size: clamp(0.875rem, 2vw, 1.0625rem); color: rgba(255,255,255,0.55); max-width: 30rem; line-height: 1.7; margin-bottom: 1.5rem; }
         .hero-buttons { display: flex; flex-wrap: wrap; gap: 0.625rem; margin-bottom: 2rem; }
-        .hero-stats { display: flex; flex-wrap: wrap; gap: 1.5rem; padding-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.08); }
-        .stat-num { font-size: 1.25rem; font-weight: 700; color: #cd853f; margin-bottom: 0; font-family: 'DM Sans', sans-serif; }
+        .hero-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 2.5rem; row-gap: 2rem; padding-top: 2rem; padding-bottom: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); }
+        .stat-num { font-size: 1.25rem; font-weight: 700; color: #cd853f; margin-bottom: 0.5rem; font-family: 'DM Sans', sans-serif; }
         .stat-label { font-size: 0.6875rem; color: rgba(255,255,255,0.4); font-family: 'DM Sans', sans-serif; }
 
         /* Countdown */
@@ -612,7 +600,7 @@ const HomeScreen = () => {
           .hero-title { margin-bottom: 0.75rem; }
           .hero-desc { margin-bottom: 1.25rem; }
           .hero-buttons { margin-bottom: 1.5rem; }
-          .hero-stats { gap: 1.25rem; }
+          .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.75rem; padding-top: 1.75rem; }
           .stat-num { font-size: 1.125rem; }
           .about-grid { grid-template-columns: 1fr; gap: 1.5rem; }
           .about-image { aspect-ratio: 16/9; }
