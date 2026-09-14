@@ -1,5 +1,13 @@
 # Damarika frontend
 
+API data uses TanStack Query with native `fetch`. Programs, products, team members,
+sites, and districts have shared query keys. Successful data stays fresh for five
+minutes and unused data stays in memory for thirty minutes. Route navigation reuses
+the cache; stale data refreshes in the background on remount or reconnect. This cache
+does not persist across full page reloads. Window focus does not trigger a refetch.
+Read requests retry once on transient errors; contact submissions never auto-retry.
+Zustand keeps only the selected program ID, not a second copy of API data.
+
 The app starts a shared `GET /health` request against the configured API origin
 before rendering React. Rendering continues immediately; API data requests wait
 for health to report `{ "success": true, "database": "ready" }`, then run
@@ -12,7 +20,7 @@ requests and allows the next request to try again. This starts the backend earli
 but does not eliminate the free hosting cold-start delay.
 
 Run readiness checks with Node.js 22.18+ or 23.6+:
-`node --test tests/apiReadiness.test.mjs`. Build with `npm run build`.
+`node --test tests/*.test.mjs`. Build with `npm run build`.
 
 ## React + TypeScript + Vite
 

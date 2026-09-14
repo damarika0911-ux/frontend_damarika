@@ -34,7 +34,7 @@ export default defineConfig({
           "vendor-react": ["react", "react-dom", "react-router-dom"],
           "vendor-mui": ["@mui/material", "@mui/icons-material"],
           "vendor-motion": ["framer-motion"],
-          "vendor-utils": ["axios", "zustand"],
+          "vendor-utils": ["@tanstack/react-query", "zustand"],
         },
       },
     },
