@@ -8,7 +8,7 @@
     "start": "vite --mode dev_k8s",
     "lint": "eslint .",
     "preview": "vite preview",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && node scripts/check-cloudflare-routing.mjs",
     "prettier": "prettier --config .prettierrc.json -w src",
     "format": "npm run lint && npm run prettier"
   },
