@@ -10,6 +10,7 @@ import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import placeholderIcon from "../assets/placeholder.svg";
 import { InlineSkeleton } from "./Loader";
 import toolsIcon from "../assets/tools.jpeg";
+import { ProgressiveImage } from "../components/common-components/ProgressiveImage";
 
 const fadeUp = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-50px" } };
 const delay = (i: number) => ({ duration: 0.5, delay: i * 0.1, ease: "easeOut" as const });
@@ -48,7 +49,7 @@ const ProductsPage: React.FC = () => {
               <p className="pd-body">All our products are carefully selected to meet professional standards and are suitable for both students and experienced archaeologists.</p>
             </m.div>
             <m.div {...fadeUp} transition={{ duration: 0.6, delay: 0.15 }} style={{ position: "relative" }}>
-              <div className="pd-info-img"><img loading="lazy" src={toolsIcon} alt="Archaeological Tools" /></div>
+              <div className="pd-info-img"><ProgressiveImage src={toolsIcon} alt="Archaeological Tools" /></div>
               <div className="pd-accent" />
             </m.div>
           </div>
@@ -76,7 +77,7 @@ const ProductsPage: React.FC = () => {
                 <m.div key={p.title} {...fadeUp} transition={delay(i)}>
                   <Card className="h-full flex flex-col group overflow-hidden pd-card">
                     <div className="pd-card-img">
-                      <img loading="lazy" src={p?.image || placeholderIcon} alt={p.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <ProgressiveImage src={p?.image || placeholderIcon} alt={p.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                       {p.badge && <Badge sx={{ background: "#6d3a1f", position: "absolute", top: "0.5rem", right: "0.5rem", fontSize: "0.625rem" }}>{p.badge}</Badge>}
                     </div>
                     <CardContent sx={{ padding: "1rem", flex: 1 }}>
