@@ -30,6 +30,19 @@ const lazyAnimationFeatures = () =>
 void warmUpApi().catch(() => {});
 initConsent();
 
+// After a new deploy, an already-open tab may request old code files that no longer exist.
+// Reload once to pick up the new version instead of showing an error (guarded against reload loops).
+window.addEventListener("vite:preloadError", (event) => {
+  const key = "chunk-reload-at";
+  let last = 0;
+  try { last = Number(sessionStorage.getItem(key) || 0); } catch { /* storage blocked */ }
+  if (Date.now() - last > 60_000) {
+    event.preventDefault();
+    try { sessionStorage.setItem(key, String(Date.now())); } catch { /* storage blocked */ }
+    window.location.reload();
+  }
+});
+
 const rootEl = document.getElementById("root")!;
 
 // Used by scripts/prerender.mjs to embed the data a page was rendered with (public API data only).

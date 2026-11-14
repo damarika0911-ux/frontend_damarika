@@ -80,6 +80,7 @@ export default function PrivacyScreen() {
             <tr><td>Cloudflare</td><td>Website hosting, security and fast delivery</td><td>Every visit</td></tr>
             <tr><td>Render</td><td>Hosting for our website's data service (API)</td><td>Every visit</td></tr>
             <tr><td>Supabase</td><td>Database and image storage</td><td>Every visit; contact form</td></tr>
+            <tr><td>Cloudflare Web Analytics</td><td>Anonymous page-load and performance statistics (no cookies, no personal data)</td><td>Every visit</td></tr>
             <tr><td>Google Analytics</td><td>Visit statistics</td><td>Only if you accept cookies</td></tr>
             <tr><td>Google Maps</td><td>Map on the Contact page</td><td>Only if you accept cookies, or click "Load map"</td></tr>
             <tr><td>WhatsApp (Meta)</td><td>Chat and orders</td><td>Only when you click a WhatsApp button</td></tr>
