@@ -8,7 +8,7 @@ const StyledFormLabel = styled(FormLabel)(() => ({
   fontSize: "14px",
   fontWeight: 600,
   lineHeight: 1.25,
-  color: "#000",
+  color: "var(--heading)",
   opacity: 1,
   transition: "opacity 0.2s ease",
   "&.Mui-disabled": {

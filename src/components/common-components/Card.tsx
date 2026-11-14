@@ -47,6 +47,7 @@ const CardTitle = React.forwardRef<
   <Typography
     ref={ref}
     variant="h6"
+    component="h3"
     fontSize="20px"
     fontWeight={600}
     lineHeight={1.3}

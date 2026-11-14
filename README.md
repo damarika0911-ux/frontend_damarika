@@ -8,16 +8,16 @@ does not persist across full page reloads. Window focus does not trigger a refet
 Read requests retry once on transient errors; contact submissions never auto-retry.
 Zustand keeps only the selected program ID, not a second copy of API data.
 
-The app starts a shared `GET /health` request against the configured API origin
-before rendering React. Rendering continues immediately; API data requests wait
-for health to report `{ "success": true, "database": "ready" }`, then run
-concurrently. The health request allows up to 90 seconds for a Render cold start;
-normal requests retain their 15-second timeout.
+Lists are paginated: programs, products and team load 10 at a time (`VITE_PAGE_SIZE`)
+and the next page loads automatically when the visitor scrolls near the end of the list
+(a "Load more" button is the keyboard/no-JS-observer fallback). Reads use GET with
+`?limit=&offset=` (and `?q=` for search), so browsers can cache them and no CORS preflight is
+needed. The map asks for all sites/districts in one page.
 
-After 14 minutes without successful API activity, the next request checks health
-again. There is no background keep-alive interval. A failed check rejects waiting
-requests and allows the next request to try again. This starts the backend earlier
-but does not eliminate the free hosting cold-start delay.
+At startup the app pings `GET /health` to wake a sleeping Render instance. Data requests no
+longer wait for it; they run in parallel and allow up to 90 seconds until the API has answered
+once (cold start), then 15 seconds. After 14 minutes without API activity the longer timeout
+applies again.
 
 Run readiness checks with Node.js 22.18+ or 23.6+:
 `node --test tests/*.test.mjs`. Build with `npm run build`.

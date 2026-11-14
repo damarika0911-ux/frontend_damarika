@@ -11,8 +11,8 @@ interface PageWrapperProps {
   jsonLd?: object;
 }
 
-const BASE_URL = "https://www.damarika.in";
-const DEFAULT_IMAGE = `${BASE_URL}/newLogo.svg`;
+const BASE_URL = "https://damarika.in";
+const DEFAULT_IMAGE = `${BASE_URL}/og-image.jpg`;
 
 const PageWrapper = ({
   children,
@@ -77,8 +77,8 @@ const PageWrapper = ({
         )}
       </Helmet>
       <m.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 12 }}
+        animate={{ y: 0 }}
         transition={{ duration: 0.5, ease: "easeOut" }}
         className="flex flex-col min-h-screen"
       >

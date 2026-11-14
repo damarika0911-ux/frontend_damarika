@@ -8,10 +8,15 @@ import MailIcon from "@mui/icons-material/Mail";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import PhoneIcon from "@mui/icons-material/Phone";
 import { m } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import placeholderIcon from "../assets/placeholder.svg";
-import wallpaper from "../assets/walpaper.png";
+import wallpaper from "../assets/hero-bg-sm.webp";
+import teamPhoto from "../assets/team-1.webp";
+import teamPhotoSmall from "../assets/team-1-700.webp";
+import teamPhotoXs from "../assets/team-1-480.webp";
+import { clickable } from "../utils/a11y";
+import { responsiveImage } from "../utils/image";
 import {
     Card,
     CardContent,
@@ -19,9 +24,10 @@ import {
     CardTitle,
 } from "../components/common-components/Card";
 import PageWrapper from "../components/common-components/PageWrapper";
-import { TamilnaduMap } from "../components/tamilnadu-map/TamilnaduSvg";
+// The map (district outlines are a lot of data) loads only when the visitor scrolls near it.
+const TamilnaduMap = lazy(() => import("../components/tamilnadu-map/TamilnaduSvg").then((m) => ({ default: m.TamilnaduMap })));
 import { useQuery } from "@tanstack/react-query";
-import { programsQuery } from "../service/queries";
+import { latestProgramsQuery } from "../service/queries";
 import { useAppStore } from "../store/appStore";
 import { InlineSkeleton } from "./Loader";
 
@@ -58,7 +64,7 @@ const contactInfo = [
     href: "mailto:damarika0911@gmail.com",
     icon: MailIcon,
   },
-  { label: "+91 7418859886", href: "tel:+917418859886", icon: PhoneIcon },
+  { label: "+91 74188 59886", href: "tel:+917418859886", icon: PhoneIcon },
   {
     label: "@teamdamarika",
     href: "https://www.instagram.com/teamdamarika?igsh=czl4OHM3Zmd4OWdk",
@@ -123,6 +129,19 @@ const CountUp = ({
   );
 };
 
+/** Renders children only once the placeholder is within 600px of the viewport. */
+function NearViewport({ children, minHeight }: { children: React.ReactNode; minHeight: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(typeof IntersectionObserver === "undefined");
+  useEffect(() => {
+    if (near || !ref.current) return;
+    const io = new IntersectionObserver((e) => { if (e.some((x) => x.isIntersecting)) setNear(true); }, { rootMargin: "600px" });
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [near]);
+  return <div ref={ref} style={near ? undefined : { minHeight }}>{near ? children : null}</div>;
+}
+
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
@@ -136,7 +155,7 @@ const delay = (i: number) => ({
 
 const HomeScreen = () => {
   const navigate = useNavigate();
-  const { data: programs = [], isPending: loading, error: queryError } = useQuery(programsQuery);
+  const { data: programs = [], isPending: loading, error: queryError } = useQuery(latestProgramsQuery);
   const error = programs.length ? null : queryError?.message;
 
   const displayPrograms = programs.slice(0, 3);
@@ -153,7 +172,7 @@ const HomeScreen = () => {
         "@type": "WebPage",
         name: "Damarika - Home",
         description: "Your gateway to the world of archaeology",
-        url: "https://www.damarika.in",
+        url: "https://damarika.in",
       }}
     >
       {/* ===== HERO ===== */}
@@ -175,8 +194,8 @@ const HomeScreen = () => {
           </m.p>
 
           <m.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 16 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
             className="hero-title"
           >
@@ -185,9 +204,6 @@ const HomeScreen = () => {
           </m.h1>
 
           <m.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
             className="hero-desc"
           >
             Creating a positive society, sensitive to history and heritage.
@@ -254,7 +270,12 @@ const HomeScreen = () => {
               <div className="about-image">
                 <img
                   loading="lazy"
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ak%201%20copy.png-Lpd2UAw8bQ6bt4PTMxlHo3mOc95Kbw.jpeg"
+                  src={teamPhoto}
+                  srcSet={`${teamPhotoXs} 480w, ${teamPhotoSmall} 700w, ${teamPhoto} 1400w`}
+                  sizes="(max-width: 768px) calc(100vw - 3rem), 600px"
+                  decoding="async"
+                  width={1400}
+                  height={1096}
                   alt="Damarika Team"
                   className="w-full h-full object-cover"
                 />
@@ -266,7 +287,7 @@ const HomeScreen = () => {
               <h2 className="section-heading">Who We Are</h2>
               <p className="body-text">
                 We started the company 'DAMARIKA' — a Greek word which denotes
-                Tamil Nadu in the book of "Periplus of Ethreyan Sea". Our team
+                Tamil Nadu in the book of "Periplus of the Erythraean Sea". Our team
                 consists of three archaeology students who made this possible
                 with our department head Mr. V. Selvakumar sir.
               </p>
@@ -275,14 +296,15 @@ const HomeScreen = () => {
                 archaeology, heritage management and museums through seminars,
                 lectures and workshops.
               </p>
-              <m.p
+              <m.a
                 whileHover={{ x: 4 }}
-                onClick={() => go("about")}
+                href="/about"
+                onClick={(e) => { e.preventDefault(); go("about"); }}
                 className="link-arrow"
               >
                 Learn more about us{" "}
                 <ArrowForwardIcon style={{ fontSize: "1rem" }} />
-              </m.p>
+              </m.a>
             </m.div>
           </div>
         </div>
@@ -302,10 +324,10 @@ const HomeScreen = () => {
           <div className="grid-4col">
             {services.map((s, i) => (
               <m.div key={s.title} {...fadeUp} transition={delay(i)}>
-                <div className="service-card" onClick={() => go("services")}>
+                <div className="service-card" {...clickable(() => go("services"))}>
                   <div className="service-icon">
                     <s.icon
-                      style={{ fontSize: "1.375rem", color: "#8b4513" }}
+                      style={{ fontSize: "1.375rem", color: "var(--brand-text)" }}
                     />
                   </div>
                   <h3 className="service-title">{s.title}</h3>
@@ -349,9 +371,9 @@ const HomeScreen = () => {
           {loading ? (
             <InlineSkeleton cards={3} cols={3} />
           ) : error ? (
-            <p style={{ textAlign: "center", color: "#ef4444" }}>{error}</p>
+            <p role="alert" style={{ textAlign: "center", color: "var(--danger)" }}>{error}</p>
           ) : displayPrograms.length === 0 ? (
-            <p style={{ textAlign: "center", color: "#a1a1aa" }}>
+            <p style={{ textAlign: "center", color: "var(--muted)" }}>
               No programs available at the moment.
             </p>
           ) : (
@@ -361,15 +383,15 @@ const HomeScreen = () => {
                   <m.div key={p.id} {...fadeUp} transition={delay(i)}>
                     <Card
                       className="h-full group overflow-hidden program-card"
-                      onClick={() => {
+                      {...clickable(() => {
                         useAppStore.getState().setActiveProgramId(p.id);
                         navigate("/programs");
-                      }}
+                      })}
                     >
                       <div className="program-image">
                         <img
                           loading="lazy"
-                          src={p.image || placeholderIcon}
+                          {...(p.image ? responsiveImage(p.image, "(max-width: 768px) calc(100vw - 3rem), (max-width: 1024px) 45vw, 400px") : { src: placeholderIcon })}
                           alt={p.title}
                           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                         />
@@ -379,7 +401,7 @@ const HomeScreen = () => {
                           style={{
                             marginBottom: "0.5rem",
                             fontSize: "1rem",
-                            color: "#1a0e05",
+                            color: "var(--heading)",
                           }}
                         >
                           {p.title}
@@ -388,7 +410,7 @@ const HomeScreen = () => {
                           style={{
                             fontSize: "0.8125rem",
                             lineHeight: 1.6,
-                            color: "#71717a",
+                            color: "var(--muted)",
                           }}
                         >
                           {p.description.length > 120
@@ -436,17 +458,21 @@ const HomeScreen = () => {
             </h2>
             <p
               className="section-sub"
-              style={{ color: "rgba(255,255,255,0.45)" }}
+              style={{ color: "rgba(255,255,255,0.68)" }}
             >
               Click on any site marker to explore details
             </p>
           </m.div>
-          <TamilnaduMap />
+          <NearViewport minHeight="34rem">
+            <Suspense fallback={<div style={{ minHeight: "34rem" }} />}>
+              <TamilnaduMap />
+            </Suspense>
+          </NearViewport>
         </div>
       </section>
 
       {/* ===== CONTACT BANNER ===== */}
-      <section style={{ padding: "3rem 0", background: "#fff" }}>
+      <section style={{ padding: "3rem 0", background: "var(--surface)" }}>
         <div className="section-container">
           <m.div
             {...fadeUp}
@@ -458,13 +484,13 @@ const HomeScreen = () => {
                 style={{
                   fontSize: "clamp(1.25rem, 3vw, 1.625rem)",
                   fontWeight: 700,
-                  color: "#1a0e05",
+                  color: "var(--heading)",
                   marginBottom: "0.25rem",
                 }}
               >
                 Have questions? Let's talk.
               </h2>
-              <p style={{ fontSize: "0.8125rem", color: "#8b7355" }}>
+              <p style={{ fontSize: "0.8125rem", color: "var(--soft)" }}>
                 Reach out through any of these channels
               </p>
             </div>
@@ -479,7 +505,7 @@ const HomeScreen = () => {
                   transition={delay(i)}
                   className="contact-link"
                 >
-                  <item.icon style={{ fontSize: "1rem", color: "#8b4513" }} />
+                  <item.icon style={{ fontSize: "1rem", color: "var(--brand-text)" }} />
                   <span>{item.label}</span>
                 </m.a>
               ))}
@@ -501,7 +527,7 @@ const HomeScreen = () => {
         .hero-buttons { display: flex; flex-wrap: wrap; gap: 0.625rem; margin-bottom: 2rem; }
         .hero-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); column-gap: 2.5rem; row-gap: 2rem; padding-top: 2rem; padding-bottom: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); }
         .stat-num { font-size: 1.25rem; font-weight: 700; color: #cd853f; margin-bottom: 0.5rem; font-family: 'DM Sans', sans-serif; }
-        .stat-label { font-size: 0.6875rem; color: rgba(255,255,255,0.4); font-family: 'DM Sans', sans-serif; }
+        .stat-label { font-size: 0.6875rem; color: rgba(255,255,255,0.68); font-family: 'DM Sans', sans-serif; }
 
         /* Countdown */
         .countdown-section { padding: 0; background: linear-gradient(135deg, #1a0e05 0%, #2d1810 50%, #3d1e08 100%); position: relative; overflow: hidden; }
@@ -513,7 +539,7 @@ const HomeScreen = () => {
         .countdown-card { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 5.5rem; height: 5.5rem; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 1rem; backdrop-filter: blur(8px); transition: transform 0.2s, border-color 0.2s; }
         .countdown-card:hover { transform: translateY(-2px); border-color: rgba(205,133,63,0.3); }
         .countdown-value { font-size: 2rem; font-weight: 800; color: #cd853f; line-height: 1; font-family: 'DM Sans', sans-serif; font-variant-numeric: tabular-nums; }
-        .countdown-unit { font-size: 0.625rem; font-weight: 600; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.25rem; font-family: 'DM Sans', sans-serif; }
+        .countdown-unit { font-size: 0.625rem; font-weight: 600; color: rgba(255,255,255,0.68); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 0.25rem; font-family: 'DM Sans', sans-serif; }
 
         @media (max-width: 480px) {
           .countdown-card { width: 4.5rem; height: 4.5rem; }
@@ -524,19 +550,19 @@ const HomeScreen = () => {
         /* Buttons */
         .btn-primary { display: inline-flex; align-items: center; gap: 0.375rem; background: #cd853f; color: #1a0e05; font-weight: 700; padding: 0.7rem 1.5rem; font-size: 0.8125rem; font-family: 'DM Sans', sans-serif; border-radius: 2rem; border: none; cursor: pointer; letter-spacing: -0.01em; }
         .btn-outline { display: inline-flex; align-items: center; gap: 0.375rem; background: transparent; color: #fff; font-weight: 600; padding: 0.7rem 1.5rem; font-size: 0.8125rem; font-family: 'DM Sans', sans-serif; border-radius: 2rem; border: 1.5px solid rgba(255,255,255,0.2); cursor: pointer; }
-        .btn-ghost { background: transparent; color: #6d3a1f; font-weight: 600; font-size: 0.8125rem; font-family: 'DM Sans', sans-serif; border: 1.5px solid rgba(109,58,31,0.15); padding: 0.625rem 1.5rem; border-radius: 2rem; cursor: pointer; }
+        .btn-ghost { background: transparent; color: var(--brand-text); font-weight: 600; font-size: 0.8125rem; font-family: 'DM Sans', sans-serif; border: 1.5px solid rgba(109,58,31,0.15); padding: 0.625rem 1.5rem; border-radius: 2rem; cursor: pointer; }
         .btn-primary-sm { display: inline-flex; align-items: center; gap: 0.375rem; background: #6d3a1f; color: #fff; font-weight: 600; font-size: 0.8125rem; font-family: 'DM Sans', sans-serif; padding: 0.625rem 1.5rem; border-radius: 2rem; border: none; cursor: pointer; }
 
         /* Sections */
-        .section-white { padding: 4rem 0; background: #fff; }
-        .section-cream { padding: 4rem 0; background: #faf8f5; }
+        .section-white { padding: 4rem 0; background: var(--surface); }
+        .section-cream { padding: 4rem 0; background: var(--page-alt); }
         .section-dark { padding: 4rem 0; background: linear-gradient(135deg, #1a0e05 0%, #3d1e08 40%, #6d3a1f 100%); }
         .section-header { text-align: center; margin-bottom: 2.5rem; }
-        .section-label { font-size: 0.6875rem; font-weight: 600; font-family: 'DM Sans', sans-serif; color: #b08968; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.375rem; }
-        .section-heading { font-size: clamp(1.375rem, 3.5vw, 2.125rem); font-weight: 700; color: #1a0e05; margin-bottom: 0.375rem; }
-        .section-sub { font-size: 0.875rem; color: #8b7355; max-width: 26rem; margin: 0 auto; }
-        .body-text { font-size: 0.9375rem; color: #52525b; line-height: 1.8; margin-bottom: 0.625rem; }
-        .link-arrow { display: inline-flex; align-items: center; cursor: pointer; color: #6d3a1f; font-weight: 600; font-size: 0.875rem; gap: 0.375rem; font-family: 'DM Sans', sans-serif; }
+        .section-label { font-size: 0.6875rem; font-weight: 600; font-family: 'DM Sans', sans-serif; color: var(--label); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.375rem; }
+        .section-heading { font-size: clamp(1.375rem, 3.5vw, 2.125rem); font-weight: 700; color: var(--heading); margin-bottom: 0.375rem; }
+        .section-sub { font-size: 0.875rem; color: var(--soft); max-width: 26rem; margin: 0 auto; }
+        .body-text { font-size: 0.9375rem; color: var(--text); line-height: 1.8; margin-bottom: 0.625rem; }
+        .link-arrow { text-decoration: none; display: inline-flex; align-items: center; cursor: pointer; color: var(--brand-text); font-weight: 600; font-size: 0.875rem; gap: 0.375rem; font-family: 'DM Sans', sans-serif; }
 
         /* About */
         .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
@@ -548,23 +574,23 @@ const HomeScreen = () => {
         .grid-3col { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
 
         /* Service card */
-        .service-card { background: #fff; border-radius: 0.75rem; padding: 1.5rem 1.25rem; text-align: center; border: 1px solid #f0ebe4; cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); height: 100%; }
+        .service-card { background: var(--surface); border-radius: 0.75rem; padding: 1.5rem 1.25rem; text-align: center; border: 1px solid var(--border); cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); height: 100%; }
         .service-card:hover { box-shadow: 0 8px 24px rgba(109,58,31,0.08); border-color: rgba(109,58,31,0.15); transform: translateY(-3px); }
         .service-icon { width: 2.75rem; height: 2.75rem; border-radius: 0.75rem; background: linear-gradient(135deg, rgba(205,133,63,0.12), rgba(109,58,31,0.08)); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; }
-        .service-title { font-weight: 600; margin-bottom: 0.375rem; font-size: 0.875rem; color: #1a0e05; }
-        .service-desc { font-size: 0.8125rem; color: #71717a; line-height: 1.55; }
+        .service-title { font-weight: 600; margin-bottom: 0.375rem; font-size: 0.875rem; color: var(--heading); }
+        .service-desc { font-size: 0.8125rem; color: var(--muted); line-height: 1.55; }
 
         /* Program card */
-        .program-card { border: 1px solid #f0ebe4; border-radius: 0.75rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .program-card { border: 1px solid var(--border); border-radius: 0.75rem; cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
         .program-card:hover { box-shadow: 0 8px 24px rgba(109,58,31,0.08); transform: translateY(-3px); }
         .program-image { height: 12rem; overflow: hidden; }
 
         /* Contact banner */
-        .contact-banner { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 2rem 2.5rem; background: #faf8f5; border-radius: 1rem; border: 1px solid #f0ebe4; }
+        .contact-banner { display: flex; align-items: center; justify-content: space-between; gap: 2rem; padding: 2rem 2.5rem; background: var(--page-alt); border-radius: 1rem; border: 1px solid var(--border); }
         .contact-banner-text { flex-shrink: 0; }
         .contact-links { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
-        .contact-link { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: #52525b; font-size: 0.8125rem; font-family: 'DM Sans', sans-serif; font-weight: 500; transition: color 0.15s; }
-        .contact-link:hover { color: #6d3a1f; }
+        .contact-link { display: flex; align-items: center; gap: 0.5rem; text-decoration: none; color: var(--text); font-size: 0.8125rem; font-family: 'DM Sans', sans-serif; font-weight: 500; transition: color 0.15s; }
+        .contact-link:hover { color: var(--brand-text); }
 
         /* ===== MOBILE ===== */
         @media (max-width: 1024px) {
@@ -572,6 +598,8 @@ const HomeScreen = () => {
           .grid-3col { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
+          /* Faint decorative texture: skipped on phones so the headline paints first (and saves a download). */
+          .hero-bg { display: none; }
           .hero-section { min-height: auto; padding: 3.5rem 0 2.5rem; }
           .hero-title { margin-bottom: 0.75rem; }
           .hero-desc { margin-bottom: 1.25rem; }

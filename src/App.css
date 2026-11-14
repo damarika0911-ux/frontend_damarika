@@ -21,8 +21,8 @@ body {
   font-family: 'Poppins', sans-serif;
   font-size: 0.9375rem;
   line-height: 1.6;
-  color: #1a1a1a;
-  background: #fff;
+  color: var(--text, #1a1a1a);
+  background: var(--page, #fff);
 }
 
 img {
@@ -48,10 +48,11 @@ img[loading="lazy"] {
   background: #6d3a1f;
   color: #fff;
   padding: 0.5rem 1rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   border-radius: 0 0 0.5rem 0.5rem;
   font-size: 0.8125rem;
   font-weight: 600;
-  z-index: 100;
+  z-index: 1000;
   text-decoration: none;
   transition: top 0.2s;
 }

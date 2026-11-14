@@ -13,7 +13,7 @@ export function ProgressiveImage({ className, priority = false, src, alt = "", o
 
   return (
     <span className={`progressive-image ${loaded ? "is-loaded" : ""}`} aria-busy={!loaded}>
-      {!loaded && <span className="progressive-image__loader" aria-label="Loading image" />}
+      {!loaded && <span className="progressive-image__loader" aria-hidden="true" />}
       <img
         {...props}
         src={src}

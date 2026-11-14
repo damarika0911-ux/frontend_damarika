@@ -9,6 +9,8 @@ import placeholderIcon from "../../assets/placeholder.svg";
 import { useQuery } from "@tanstack/react-query";
 import { sitesQuery, districtsQuery } from "../../service/queries";
 import { parseImageUrl } from "../../utils/config";
+import { clickable } from "../../utils/a11y";
+import { responsiveImage } from "../../utils/image";
 import { districts } from "./districtPaths";
 
 type HeritageType = "cultural" | "natural" | "mixed";
@@ -189,8 +191,10 @@ export const TamilnaduMap = () => {
                 const pos = sitePositions[i];
                 if (!pos) return null;
                 return (
-                  <g key={site.id} filter={sel || hov ? "url(#s-glow)" : undefined} style={{ cursor: "pointer" }}
-                    onClick={() => { setSelectedSite(site); setSelectedDistrict(null); setActiveImgIdx(0); }} onMouseEnter={() => setHoveredSite(site.id)} onMouseLeave={() => setHoveredSite(null)}>
+                  <g key={site.id} filter={sel || hov ? "url(#s-glow)" : undefined} style={{ cursor: "pointer", outline: "none" }} className="map-marker"
+                    {...clickable(() => { setSelectedSite(site); setSelectedDistrict(null); setActiveImgIdx(0); }, `${site.name}, ${site.district || ""}`)}
+                    onMouseEnter={() => setHoveredSite(site.id)} onMouseLeave={() => setHoveredSite(null)}
+                    onFocus={() => setHoveredSite(site.id)} onBlur={() => setHoveredSite(null)}>
                     {sel && (
                       <circle cx={pos.x} cy={pos.y} r="10" fill="none" stroke={cfg.color} strokeWidth="1">
                         <animate attributeName="r" from="7" to="16" dur="1.5s" repeatCount="indefinite" />
@@ -225,7 +229,7 @@ export const TamilnaduMap = () => {
                   const currentImg = allImgs.length > 0 ? allImgs[activeImgIdx % allImgs.length] : placeholderIcon;
                   return (
                     <div className="tn-detail-img">
-                      <img loading="lazy" src={currentImg} alt={selectedSite.name} />
+                      <img loading="lazy" decoding="async" {...responsiveImage(currentImg, "(max-width: 768px) 100vw, 420px", 960)} alt={selectedSite.name} />
                       <div className="tn-detail-img-overlay" />
                       <IconButton size="small" onClick={() => setSelectedSite(null)}
                         sx={{ position: "absolute", top: 8, right: 8, bgcolor: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)", color: "#fff", "&:hover": { bgcolor: "rgba(0,0,0,0.5)" }, width: 28, height: 28 }}>
@@ -256,11 +260,11 @@ export const TamilnaduMap = () => {
                   <h3 className="tn-detail-title">{selectedSite.name}</h3>
                   <div className="tn-detail-meta">
                     <div className="tn-meta-chip">
-                      <PlaceIcon sx={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }} />
+                      <PlaceIcon sx={{ fontSize: 14, color: "rgba(255,255,255,0.68)" }} />
                       <span>{selectedSite.district}</span>
                     </div>
                     <div className="tn-meta-chip">
-                      <CalendarMonthIcon sx={{ fontSize: 14, color: "rgba(255,255,255,0.5)" }} />
+                      <CalendarMonthIcon sx={{ fontSize: 14, color: "rgba(255,255,255,0.68)" }} />
                       <span>{selectedSite.period}</span>
                     </div>
                   </div>
@@ -274,7 +278,7 @@ export const TamilnaduMap = () => {
                 {/* Image Gallery */}
                 {selectedDistrict.images.length > 0 ? (
                   <div className="tn-detail-img">
-                    <img loading="lazy" src={selectedDistrict.images[activeImgIdx] || placeholderIcon} alt={selectedDistrict.name} />
+                    <img loading="lazy" decoding="async" {...(selectedDistrict.images[activeImgIdx] ? responsiveImage(selectedDistrict.images[activeImgIdx], "(max-width: 768px) 100vw, 420px", 960) : { src: placeholderIcon })} alt={selectedDistrict.name} />
                     <div className="tn-detail-img-overlay" />
                     <IconButton size="small" onClick={() => { setSelectedDistrict(null); }}
                       sx={{ position: "absolute", top: 8, right: 8, bgcolor: "rgba(0,0,0,0.35)", backdropFilter: "blur(4px)", color: "#fff", "&:hover": { bgcolor: "rgba(0,0,0,0.5)" }, width: 28, height: 28 }}>
@@ -318,7 +322,7 @@ export const TamilnaduMap = () => {
                   {/* Notable Places */}
                   {selectedDistrict.notablePlaces.length > 0 && (
                     <div style={{ marginBottom: "0.75rem" }}>
-                      <p style={{ fontSize: "0.625rem", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", fontFamily: "'DM Sans', sans-serif" }}>
+                      <p style={{ fontSize: "0.625rem", fontWeight: 600, color: "rgba(255,255,255,0.68)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", fontFamily: "'DM Sans', sans-serif" }}>
                         Notable Places
                       </p>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
@@ -332,7 +336,7 @@ export const TamilnaduMap = () => {
                   {/* Sites in this district */}
                   {districtSites.length > 0 && (
                     <div>
-                      <p style={{ fontSize: "0.625rem", fontWeight: 600, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", fontFamily: "'DM Sans', sans-serif" }}>
+                      <p style={{ fontSize: "0.625rem", fontWeight: 600, color: "rgba(255,255,255,0.68)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "0.375rem", fontFamily: "'DM Sans', sans-serif" }}>
                         Heritage Sites ({districtSites.length})
                       </p>
                       <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
@@ -354,7 +358,7 @@ export const TamilnaduMap = () => {
             ) : (
               <m.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="tn-empty">
                 <div className="tn-empty-icon">
-                  <PlaceIcon sx={{ fontSize: 24, color: "rgba(255,255,255,0.4)" }} />
+                  <PlaceIcon sx={{ fontSize: 24, color: "rgba(255,255,255,0.68)" }} />
                 </div>
                 <p className="tn-empty-title">Explore the Map</p>
                 <p className="tn-empty-sub">Click a district to see its images and details, or click a marker to explore heritage sites</p>
@@ -396,13 +400,13 @@ export const TamilnaduMap = () => {
         .tn-site-card:hover { background: rgba(255,255,255,0.1); }
         .tn-site-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
         .tn-site-name { font-size: 0.75rem; font-weight: 600; color: rgba(255,255,255,0.8); flex: 1; }
-        .tn-site-period { font-size: 0.625rem; color: rgba(255,255,255,0.35); font-family: 'DM Sans', sans-serif; }
+        .tn-site-period { font-size: 0.625rem; color: rgba(255,255,255,0.68); font-family: 'DM Sans', sans-serif; }
 
         /* Empty state */
         .tn-empty { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 0.75rem; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 2rem 1.25rem; }
         .tn-empty-icon { width: 2.5rem; height: 2.5rem; border-radius: 50%; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; }
         .tn-empty-title { font-size: 0.875rem; font-weight: 600; color: rgba(255,255,255,0.7); margin-bottom: 0.25rem; }
-        .tn-empty-sub { font-size: 0.6875rem; color: rgba(255,255,255,0.3); max-width: 13rem; line-height: 1.5; }
+        .tn-empty-sub { font-size: 0.6875rem; color: rgba(255,255,255,0.68); max-width: 13rem; line-height: 1.5; }
 
         @media (max-width: 768px) {
           .tn-map-layout { grid-template-columns: 1fr; }

@@ -7,7 +7,18 @@ import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import XIcon from "@mui/icons-material/X";
 import FacebookIcon from "@mui/icons-material/Facebook";
 import ArrowOutwardIcon from "@mui/icons-material/ArrowOutward";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import logo from "../../assets/newLogo.svg";
+import { BUSINESS, whatsappLink } from "../../utils/business";
+import { openCookieSettings } from "../../utils/consent";
+
+const legalLinks = [
+  { label: "Privacy Policy", to: "/privacy" },
+  { label: "Cookie Policy", to: "/privacy#cookies" },
+  { label: "Terms of Service", to: "/terms" },
+  { label: "Refund Policy", to: "/terms#refunds" },
+];
+const bottomLinkStyle: React.CSSProperties = { fontSize: "0.75rem", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.72)", textDecoration: "underline", textUnderlineOffset: "2px", background: "none", border: "none", padding: 0, cursor: "pointer" };
 
 const navLinks = [
   { label: "Home", route: "" },
@@ -21,6 +32,7 @@ const navLinks = [
 const socialLinks = [
   { icon: EmailIcon, href: "mailto:damarika0911@gmail.com", label: "Email" },
   { icon: LocalPhoneIcon, href: "tel:+917418859886", label: "Phone" },
+  { icon: WhatsAppIcon, href: whatsappLink(), label: "WhatsApp" },
   { icon: InstagramIcon, href: "https://www.instagram.com/teamdamarika?igsh=czl4OHM3Zmd4OWdk", label: "Instagram" },
   { icon: YouTubeIcon, href: "https://www.youtube.com/@damarika", label: "YouTube" },
   { icon: FacebookIcon, href: "https://www.facebook.com/share/191PyLK6SF/", label: "Facebook" },
@@ -42,7 +54,7 @@ function Footer() {
           <h2 style={{ fontSize: "clamp(1.25rem, 3vw, 1.75rem)", fontWeight: 700, color: "#fff", margin: 0 }}>
             Ready to Explore the Past?
           </h2>
-          <p style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.6)", maxWidth: "28rem", margin: 0, lineHeight: 1.6 }}>
+          <p style={{ fontSize: "0.875rem", color: "rgba(255,255,255,0.88)", maxWidth: "28rem", margin: 0, lineHeight: 1.6 }}>
             Join us in our mission to promote awareness of archaeology and heritage across Tamil Nadu.
           </p>
           <button
@@ -89,7 +101,7 @@ function Footer() {
               alt="Damarika"
               style={{ width: "8.5rem", marginBottom: "1rem", filter: "brightness(0) invert(1)", opacity: 0.85 }}
             />
-            <p style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.4)", lineHeight: 1.7, maxWidth: "18rem", marginBottom: "1.5rem" }}>
+            <p style={{ fontSize: "0.8125rem", color: "rgba(255,255,255,0.68)", lineHeight: 1.7, maxWidth: "18rem", marginBottom: "1.5rem" }}>
               Creating awareness about archaeology, heritage management and museums through seminars, lectures and workshops.
             </p>
             {/* Social Icons */}
@@ -97,10 +109,9 @@ function Footer() {
               {socialLinks.map((social) => (
                 <a
                   key={social.label}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  {...(social.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   href={social.href}
-                  aria-label={social.label}
+                  aria-label={social.href.startsWith("http") ? `${social.label} (opens in a new tab)` : social.label}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.background = "rgba(255,255,255,0.15)";
                     e.currentTarget.style.color = "#fff";
@@ -108,7 +119,7 @@ function Footer() {
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                    e.currentTarget.style.color = "rgba(255,255,255,0.5)";
+                    e.currentTarget.style.color = "rgba(255,255,255,0.68)";
                     e.currentTarget.style.transform = "translateY(0)";
                   }}
                   style={{
@@ -119,7 +130,7 @@ function Footer() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    color: "rgba(255,255,255,0.5)",
+                    color: "rgba(255,255,255,0.68)",
                     transition: "all 0.2s cubic-bezier(0.4,0,0.2,1)",
                     textDecoration: "none",
                   }}
@@ -132,7 +143,7 @@ function Footer() {
 
           {/* Navigation */}
           <div>
-            <h3 style={{ fontSize: "0.75rem", fontWeight: 600, fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)", marginBottom: "1.25rem" }}>
+            <h3 style={{ fontSize: "0.75rem", fontWeight: 600, fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.68)", marginBottom: "1.25rem" }}>
               Navigation
             </h3>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -146,13 +157,13 @@ function Footer() {
                       e.currentTarget.style.paddingLeft = "0.25rem";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "rgba(255,255,255,0.45)";
+                      e.currentTarget.style.color = "rgba(255,255,255,0.68)";
                       e.currentTarget.style.paddingLeft = "0";
                     }}
                     style={{
                       fontSize: "0.8125rem",
                       fontFamily: "'DM Sans', sans-serif",
-                      color: "rgba(255,255,255,0.45)",
+                      color: "rgba(255,255,255,0.68)",
                       cursor: "pointer",
                       transition: "all 0.2s",
                       display: "block",
@@ -168,7 +179,7 @@ function Footer() {
 
           {/* Programs */}
           <div>
-            <h3 style={{ fontSize: "0.75rem", fontWeight: 600, fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)", marginBottom: "1.25rem" }}>
+            <h3 style={{ fontSize: "0.75rem", fontWeight: 600, fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.68)", marginBottom: "1.25rem" }}>
               Programs
             </h3>
             <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -182,13 +193,13 @@ function Footer() {
                       e.currentTarget.style.paddingLeft = "0.25rem";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.color = "rgba(255,255,255,0.45)";
+                      e.currentTarget.style.color = "rgba(255,255,255,0.68)";
                       e.currentTarget.style.paddingLeft = "0";
                     }}
                     style={{
                       fontSize: "0.8125rem",
                       fontFamily: "'DM Sans', sans-serif",
-                      color: "rgba(255,255,255,0.45)",
+                      color: "rgba(255,255,255,0.68)",
                       cursor: "pointer",
                       transition: "all 0.2s",
                       display: "block",
@@ -204,31 +215,30 @@ function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h3 style={{ fontSize: "0.75rem", fontWeight: 600, fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.3)", marginBottom: "1.25rem" }}>
+            <h3 style={{ fontSize: "0.75rem", fontWeight: 600, fontFamily: "'DM Sans', sans-serif", textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.68)", marginBottom: "1.25rem" }}>
               Contact
             </h3>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
               <a
                 href="mailto:damarika0911@gmail.com"
-                style={{ fontSize: "0.8125rem", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.45)", textDecoration: "none", transition: "color 0.15s" }}
+                style={{ fontSize: "0.8125rem", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.68)", textDecoration: "none", transition: "color 0.15s" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.68)")}
               >
                 damarika0911@gmail.com
               </a>
               <a
                 href="tel:+917418859886"
-                style={{ fontSize: "0.8125rem", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.45)", textDecoration: "none", transition: "color 0.15s" }}
+                style={{ fontSize: "0.8125rem", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.68)", textDecoration: "none", transition: "color 0.15s" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "#fff")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.68)")}
               >
                 +91 74188 59886
               </a>
-              <p style={{ fontSize: "0.8125rem", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.35)", margin: 0, lineHeight: 1.6 }}>
-                Tamil University,<br />
-                Thanjavur, Tamil Nadu,<br />
-                India - 613010
-              </p>
+              <address style={{ fontStyle: "normal", fontSize: "0.8125rem", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.68)", margin: 0, lineHeight: 1.6 }}>
+                {BUSINESS.legalName}<br />
+                {BUSINESS.addressLines.map((l) => (<span key={l}>{l}<br /></span>))}
+              </address>
             </div>
           </div>
         </div>
@@ -237,12 +247,19 @@ function Footer() {
       {/* Bottom Bar */}
       <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="section-container" style={{ paddingTop: "1.25rem", paddingBottom: "1.25rem", display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
-          <p style={{ fontSize: "0.75rem", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.25)", margin: 0 }}>
-            &copy; {new Date().getFullYear()} Damarika. All rights reserved.
+          <p style={{ fontSize: "0.75rem", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.68)", margin: 0 }}>
+            &copy; {new Date().getFullYear()} {BUSINESS.legalName} All rights reserved.
           </p>
-          <p style={{ fontSize: "0.75rem", fontFamily: "'DM Sans', sans-serif", color: "rgba(255,255,255,0.2)", margin: 0 }}>
-            Tamil Nadu, India
-          </p>
+          <nav aria-label="Legal" style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem 1.125rem", alignItems: "center" }}>
+            {legalLinks.map((l) => (
+              <a key={l.to} href={l.to} onClick={(e) => { e.preventDefault(); navigate(l.to); }} style={bottomLinkStyle}>
+                {l.label}
+              </a>
+            ))}
+            <button type="button" onClick={openCookieSettings} style={bottomLinkStyle}>
+              Cookie settings
+            </button>
+          </nav>
         </div>
       </div>
 

@@ -1,9 +1,16 @@
 import { m } from "framer-motion";
 import placeholderIcon from "../assets/placeholder.svg";
+import { safeUrl } from "../utils/safeUrl";
+import { responsiveImage } from "../utils/image";
+import aboutHeroBg from "../assets/about-hero-bg-sm.webp";
+import teamPhoto2 from "../assets/team-2.webp";
+import teamPhoto2Small from "../assets/team-2-700.webp";
+import teamPhoto2Xs from "../assets/team-2-480.webp";
 import PageWrapper from "../components/common-components/PageWrapper";
 import { type SocialLink } from "../store/localStore";
-import { useQuery } from "@tanstack/react-query";
-import { peopleQuery } from "../service/queries";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { peopleInfiniteQuery } from "../service/queries";
+import InfiniteScroll from "../components/common-components/InfiniteScroll";
 
 const fadeUp = {
   initial: { opacity: 0, y: 20 },
@@ -63,7 +70,9 @@ const values = [
 ];
 
 const AboutPage = () => {
-  const { data: teamMembers = [], isPending, error } = useQuery(peopleQuery);
+  const people = useInfiniteQuery(peopleInfiniteQuery);
+  const teamMembers = people.data?.pages.flatMap((p) => p.items) ?? [];
+  const { isPending, error } = people;
 
   return (
     <PageWrapper
@@ -75,7 +84,7 @@ const AboutPage = () => {
         "@context": "https://schema.org",
         "@type": "AboutPage",
         name: "About Damarika",
-        url: "https://www.damarika.in/about",
+        url: "https://damarika.in/about",
       }}
     >
       {/* ===== HERO ===== */}
@@ -92,21 +101,18 @@ const AboutPage = () => {
             About Damarika
           </m.p>
           <m.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ y: 16 }}
+            animate={{ y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
             className="ab-hero-title"
           >
             We Bring the <span style={{ color: "#cd853f" }}>Past to Life</span>
           </m.h1>
           <m.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
             className="ab-hero-desc"
           >
             'DAMARIKA' — a Greek word which denotes Tamil Nadu in the book of
-            "Periplus of Ethreyan Sea". Three archaeology students with a
+            "Periplus of the Erythraean Sea". Three archaeology students with a
             mission to promote heritage awareness.
           </m.p>
         </div>
@@ -151,7 +157,12 @@ const AboutPage = () => {
               <div className="ab-mission-img">
                 <img
                   loading="lazy"
-                  src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ak%202%20copy.png-8Z6GPuxt9GTiHJe6wrC4iK5IYTmx2y.jpeg"
+                  src={teamPhoto2}
+                  srcSet={`${teamPhoto2Xs} 480w, ${teamPhoto2Small} 700w, ${teamPhoto2} 1400w`}
+                  sizes="(max-width: 768px) calc(100vw - 3rem), 600px"
+                  decoding="async"
+                  width={1400}
+                  height={1096}
                   alt="Damarika Team"
                 />
               </div>
@@ -206,12 +217,12 @@ const AboutPage = () => {
           <div className="ab-team-grid">
             {teamMembers.length > 0 &&
               teamMembers.map((member, i) => (
-                <m.div key={member.name} {...fadeUp} transition={delay(i)}>
+                <m.div key={member.name} {...fadeUp} transition={delay(i % 10)}>
                   <div className="ab-team-card group">
                     <div className="ab-team-img">
                       <img
                         loading="lazy"
-                        src={member.image || placeholderIcon}
+                        {...(member.image ? responsiveImage(member.image, "(max-width: 640px) calc(100vw - 3rem), 320px", 640) : { src: placeholderIcon })}
                         alt={member.name}
                         className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105 group-hover:brightness-[0.6]"
                       />
@@ -245,10 +256,10 @@ const AboutPage = () => {
                         {/* Social links */}
                         {member.social_links && member.social_links.length > 0 && (
                           <div className="ab-team-socials">
-                            {member.social_links.map((link: SocialLink, idx: number) => (
+                            {member.social_links.filter((link: SocialLink) => safeUrl(link.url)).map((link: SocialLink, idx: number) => (
                               <a
                                 key={idx}
-                                href={link.url}
+                                href={safeUrl(link.url) ?? undefined}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="ab-team-social-icon"
@@ -265,6 +276,14 @@ const AboutPage = () => {
                 </m.div>
               ))}
           </div>
+          <InfiniteScroll
+            hasMore={!!people.hasNextPage}
+            loading={people.isFetchingNextPage}
+            onLoadMore={() => void people.fetchNextPage()}
+            error={people.isFetchNextPageError ? people.error?.message : null}
+            loadedCount={teamMembers.length}
+            noun="team members"
+          />
         </div>
       </section>
 
@@ -272,21 +291,21 @@ const AboutPage = () => {
       <style>{`
         /* Hero */
         .ab-hero { position: relative; display: flex; align-items: center; background: #0f0906; overflow: hidden; padding: 5rem 0 4.5rem; }
-        .ab-hero-bg { position: absolute; inset: 0; background: url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/ak%201%20copy.png-Lpd2UAw8bQ6bt4PTMxlHo3mOc95Kbw.jpeg') center/cover; opacity: 0.2; }
+        .ab-hero-bg { position: absolute; inset: 0; background: url('${aboutHeroBg}') center/cover; opacity: 0.2; }
         .ab-hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(15,9,6,0.92) 0%, rgba(61,30,8,0.75) 50%, rgba(139,69,19,0.5) 100%); }
         .ab-hero-content { position: relative; z-index: 1; max-width: 40rem; }
         .ab-hero-label { font-size: 0.6875rem; font-weight: 600; font-family: 'DM Sans', sans-serif; color: #cd853f; letter-spacing: 0.25em; text-transform: uppercase; margin-bottom: 1rem; }
         .ab-hero-title { font-size: clamp(1.75rem, 5vw, 3rem); font-weight: 700; color: #fff; line-height: 1.1; margin-bottom: 1rem; letter-spacing: -0.02em; }
-        .ab-hero-desc { font-size: clamp(0.8125rem, 2vw, 0.9375rem); color: rgba(255,255,255,0.5); max-width: 32rem; line-height: 1.75; }
+        .ab-hero-desc { font-size: clamp(0.8125rem, 2vw, 0.9375rem); color: rgba(255,255,255,0.68); max-width: 32rem; line-height: 1.75; }
 
         /* Sections */
-        .ab-section-white { padding: 4rem 0; background: #fff; }
-        .ab-section-cream { padding: 4rem 0; background: #faf8f5; }
+        .ab-section-white { padding: 4rem 0; background: var(--surface); }
+        .ab-section-cream { padding: 4rem 0; background: var(--page-alt); }
         .ab-section-header { text-align: center; margin-bottom: 2.5rem; }
-        .ab-label { font-size: 0.6875rem; font-weight: 600; font-family: 'DM Sans', sans-serif; color: #b08968; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.375rem; }
-        .ab-heading { font-size: clamp(1.375rem, 3.5vw, 2.125rem); font-weight: 700; color: #1a0e05; margin-bottom: 0.375rem; }
-        .ab-sub { font-size: 0.875rem; color: #8b7355; max-width: 26rem; margin: 0 auto; }
-        .ab-body { font-size: 0.9375rem; color: #52525b; line-height: 1.8; margin-bottom: 0.625rem; }
+        .ab-label { font-size: 0.6875rem; font-weight: 600; font-family: 'DM Sans', sans-serif; color: var(--label); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.375rem; }
+        .ab-heading { font-size: clamp(1.375rem, 3.5vw, 2.125rem); font-weight: 700; color: var(--heading); margin-bottom: 0.375rem; }
+        .ab-sub { font-size: 0.875rem; color: var(--soft); max-width: 26rem; margin: 0 auto; }
+        .ab-body { font-size: 0.9375rem; color: var(--text); line-height: 1.8; margin-bottom: 0.625rem; }
 
         /* Mission */
         .ab-mission-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: center; }
@@ -294,16 +313,16 @@ const AboutPage = () => {
         .ab-mission-img img { width: 100%; height: 100%; object-fit: cover; }
         .ab-accent { position: absolute; bottom: -0.5rem; right: -0.5rem; width: 4rem; height: 4rem; border-radius: 0.75rem; background: #cd853f; opacity: 0.12; z-index: -1; }
         .ab-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.625rem; }
-        .ab-list-item { display: flex; align-items: flex-start; gap: 0.625rem; font-size: 0.8125rem; color: #52525b; }
+        .ab-list-item { display: flex; align-items: flex-start; gap: 0.625rem; font-size: 0.8125rem; color: var(--text); }
         .ab-dot { width: 0.375rem; height: 0.375rem; border-radius: 50%; background: #b08968; margin-top: 0.5rem; flex-shrink: 0; }
 
         /* Values */
         .ab-values-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-        .ab-value-card { background: #fff; border-radius: 0.75rem; padding: 1.75rem 1.25rem; text-align: center; border: 1px solid #f0ebe4; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); height: 100%; }
+        .ab-value-card { background: var(--surface); border-radius: 0.75rem; padding: 1.75rem 1.25rem; text-align: center; border: 1px solid var(--border); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); height: 100%; }
         .ab-value-card:hover { box-shadow: 0 8px 24px rgba(109,58,31,0.08); transform: translateY(-3px); border-color: rgba(109,58,31,0.12); }
-        .ab-value-num { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: linear-gradient(135deg, rgba(205,133,63,0.15), rgba(109,58,31,0.08)); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; font-size: 0.75rem; font-weight: 700; color: #8b4513; font-family: 'DM Sans', sans-serif; }
-        .ab-value-title { font-size: 0.9375rem; font-weight: 700; color: #1a0e05; margin-bottom: 0.375rem; }
-        .ab-value-desc { font-size: 0.8125rem; color: #71717a; line-height: 1.55; }
+        .ab-value-num { width: 2.25rem; height: 2.25rem; border-radius: 50%; background: linear-gradient(135deg, rgba(205,133,63,0.15), rgba(109,58,31,0.08)); display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; font-size: 0.75rem; font-weight: 700; color: var(--brand-text); font-family: 'DM Sans', sans-serif; }
+        .ab-value-title { font-size: 0.9375rem; font-weight: 700; color: var(--heading); margin-bottom: 0.375rem; }
+        .ab-value-desc { font-size: 0.8125rem; color: var(--muted); line-height: 1.55; }
 
         /* Team */
         .ab-team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
@@ -338,6 +357,8 @@ const AboutPage = () => {
 
         /* Mobile */
         @media (max-width: 768px) {
+          /* Faint decorative photo: skipped on phones so the headline paints first. */
+          .ab-hero-bg { display: none; }
           .ab-hero { padding: 3.5rem 0 3rem; }
           .ab-section-white, .ab-section-cream { padding: 2.75rem 0; }
           .ab-section-header { margin-bottom: 1.75rem; }

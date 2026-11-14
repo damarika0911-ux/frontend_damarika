@@ -5,23 +5,37 @@ import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import GroupIcon from "@mui/icons-material/Group";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import { m } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
-import { programsQuery } from "../service/queries";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { programQuery, programsInfiniteQuery } from "../service/queries";
+import InfiniteScroll from "../components/common-components/InfiniteScroll";
 import placeholderIcon from "../assets/placeholder.svg";
 import { Badge } from "../components/common-components/Badge";
 import PageWrapper from "../components/common-components/PageWrapper";
+import { clickable } from "../utils/a11y";
+import { responsiveImage } from "../utils/image";
+import { openExternal, safeUrl } from "../utils/safeUrl";
 import { useAppStore } from "../store/appStore";
 
+const formatDate = (d: string | Date) => new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+
 const fadeUp = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-50px" } };
-const del = (i: number) => ({ duration: 0.5, delay: i * 0.1, ease: "easeOut" as const });
+// Stagger within each page of 10 only, so cards loaded later appear immediately.
+const del = (i: number) => ({ duration: 0.5, delay: (i % 10) * 0.08, ease: "easeOut" as const });
 
 const ProgramsPage: React.FC = () => {
-  const { data: programs = [], isPending: loading, error: queryError } = useQuery(programsQuery);
-  const error = programs.length ? null : queryError?.message;
+  const list = useInfiniteQuery(programsInfiniteQuery);
+  const programs = list.data?.pages.flatMap((p) => p.items) ?? [];
+  const total = list.data?.pages[0]?.meta.total;
+  const loading = list.isPending;
+  const refetch = list.refetch;
+  const error = programs.length ? null : list.error?.message;
   const setActiveProgramId = useAppStore((s) => s.setActiveProgramId);
-  const id = useAppStore((s) => s.activeProgramId) ?? programs[0]?.id ?? 1;
+  const id = useAppStore((s) => s.activeProgramId) ?? programs[0]?.id ?? null;
   const otherPrograms = programs;
-  const sel = id ? programs.find((p) => Number(p.id) === Number(id)) : null;
+  const inList = id ? programs.find((p) => Number(p.id) === Number(id)) : undefined;
+  // A program chosen from search may not be in the pages loaded so far: fetch just that one.
+  const single = useQuery({ ...programQuery(Number(id)), enabled: !!id && !inList && !loading });
+  const sel = inList ?? single.data ?? null;
 
   if (loading) return (
     <div className="pg-skeleton-page">
@@ -45,11 +59,11 @@ const ProgramsPage: React.FC = () => {
         .pg-skeleton-page { min-height: 100vh; }
         .pg-skeleton-hero { padding: 4rem 2.5rem 3rem; background: #1a0e05; }
         .pg-skeleton-detail { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; padding: 3rem 2.5rem; }
-        .pg-skeleton-img { aspect-ratio: 16/10; border-radius: 0.75rem; background: #f0ebe4; animation: pg-pulse 1.5s ease-in-out infinite; }
+        .pg-skeleton-img { aspect-ratio: 16/10; border-radius: 0.75rem; background: var(--skeleton); animation: pg-pulse 1.5s ease-in-out infinite; }
         .pg-skeleton-content { display: flex; flex-direction: column; justify-content: center; }
         .pg-skeleton-bar { border-radius: 0.375rem; animation: pg-pulse 1.5s ease-in-out infinite; }
         .pg-skeleton-hero .pg-skeleton-bar { background: rgba(255,255,255,0.08); }
-        .pg-skeleton-detail .pg-skeleton-bar { background: #f0ebe4; }
+        .pg-skeleton-detail .pg-skeleton-bar { background: var(--skeleton); }
         @keyframes pg-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
         @media (max-width: 768px) {
           .pg-skeleton-detail { grid-template-columns: 1fr; }
@@ -59,12 +73,20 @@ const ProgramsPage: React.FC = () => {
       `}</style>
     </div>
   );
-  if (error) return <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", color: "#ef4444" }}>{error}</div>;
+  if (error) return (
+    <section style={{ minHeight: "60vh", display: "flex", alignItems: "center", background: "var(--page)", padding: "4rem 0" }}>
+      <div className="section-container" style={{ textAlign: "center" }}>
+        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, color: "var(--heading)", margin: "0 0 0.5rem" }}>Our Programs</h1>
+        <p role="alert" style={{ color: "var(--danger)", margin: "0 0 1.25rem" }}>We couldn&apos;t load programs right now. {error}</p>
+        <button type="button" onClick={() => refetch()} style={{ background: "var(--brand)", color: "#fff", border: "none", borderRadius: "2rem", padding: "0.625rem 1.5rem", fontWeight: 600, cursor: "pointer" }}>Try again</button>
+      </div>
+    </section>
+  );
 
   const pick = (pid: number) => { setActiveProgramId(pid); window.scrollTo({ top: 0, behavior: "smooth" }); };
 
   return (
-    <PageWrapper title={sel ? sel.title : "Our Programs"} description="Explore Damarika's educational programs — archaeology workshops, field training sessions, seminars on Tamil Nadu heritage, and e-certificate courses." keywords="archaeology programs, archaeology workshops Tamil Nadu, field training, seminars, e-certificate course, archaeological awareness" path="/programs" jsonLd={{ "@context": "https://schema.org", "@type": "ItemList", "name": "Damarika Programs", "url": "https://www.damarika.in/programs", "numberOfItems": programs.length }}>
+    <PageWrapper title="Our Programs" description="Explore Damarika's educational programs — archaeology workshops, field training sessions, seminars on Tamil Nadu heritage, and e-certificate courses." keywords="archaeology programs, archaeology workshops Tamil Nadu, field training, seminars, e-certificate course, archaeological awareness" path="/programs" jsonLd={{ "@context": "https://schema.org", "@type": "ItemList", "name": "Damarika Programs", "url": "https://damarika.in/programs", "numberOfItems": programs.length }}>
 
       {/* ===== HERO ===== */}
       <section className="pg-hero">
@@ -73,12 +95,12 @@ const ProgramsPage: React.FC = () => {
           <m.p initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="pg-label" style={{ color: "#cd853f" }}>
             Learn & Grow
           </m.p>
-          <m.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="pg-hero-title">
+          <m.h1 initial={{ y: 16 }} animate={{ y: 0 }} transition={{ duration: 0.7, delay: 0.3 }} className="pg-hero-title">
             Our <span style={{ color: "#cd853f" }}>Programs</span>
           </m.h1>
-          <m.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.5 }} className="pg-hero-desc">
+          <p className="pg-hero-desc">
             Explore our educational programs and workshops designed to promote archaeological awareness
-          </m.p>
+          </p>
         </div>
       </section>
 
@@ -86,44 +108,44 @@ const ProgramsPage: React.FC = () => {
       {sel && (
         <section className="pg-detail-section">
           <div className="section-container">
-            <m.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} className="pg-detail">
+            <div className="pg-detail">
               {/* Image */}
-              <m.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="pg-detail-left">
+              <div className="pg-detail-left">
                 <div className="pg-detail-img">
-                  <img loading="lazy" src={sel.image || placeholderIcon} alt={sel.title} />
+                  <img fetchPriority="high" decoding="async" {...(sel.image ? responsiveImage(sel.image, "(max-width: 768px) calc(100vw - 3rem), 600px") : { src: placeholderIcon })} alt={sel.title} />
                 </div>
                 {/* Meta under image */}
                 <div className="pg-meta-grid">
                   {sel.date && (
                     <div className="pg-meta-item">
-                      <CalendarTodayIcon sx={{ fontSize: "1rem", color: "#8b4513" }} />
+                      <CalendarTodayIcon sx={{ fontSize: "1rem", color: "var(--brand-text)" }} />
                       <div>
                         <span className="pg-meta-label">Date</span>
-                        <span className="pg-meta-value">{new Date(sel.date).toLocaleDateString()}</span>
+                        <span className="pg-meta-value">{formatDate(sel.date)}</span>
                       </div>
                     </div>
                   )}
-                  {sel.duration && (
+                  {Number(sel.duration) > 0 && (
                     <div className="pg-meta-item">
-                      <AccessTimeIcon sx={{ fontSize: "1rem", color: "#8b4513" }} />
+                      <AccessTimeIcon sx={{ fontSize: "1rem", color: "var(--brand-text)" }} />
                       <div>
                         <span className="pg-meta-label">Duration</span>
-                        <span className="pg-meta-value">{sel?.sessions || 0} sessions ({sel.duration} hrs)</span>
+                        <span className="pg-meta-value">{sel.sessions ? `${sel.sessions} ${Number(sel.sessions) === 1 ? "session" : "sessions"} · ` : ""}{sel.duration} {Number(sel.duration) === 1 ? "hr" : "hrs"}</span>
                       </div>
                     </div>
                   )}
                   {sel.location && (
                     <div className="pg-meta-item">
-                      <LocationOnIcon sx={{ fontSize: "1rem", color: "#8b4513" }} />
+                      <LocationOnIcon sx={{ fontSize: "1rem", color: "var(--brand-text)" }} />
                       <div>
                         <span className="pg-meta-label">Location</span>
                         <span className="pg-meta-value">{sel.location}</span>
                       </div>
                     </div>
                   )}
-                  {sel.participants && (
+                  {Number(sel.participants) > 0 && (
                     <div className="pg-meta-item">
-                      <GroupIcon sx={{ fontSize: "1rem", color: "#8b4513" }} />
+                      <GroupIcon sx={{ fontSize: "1rem", color: "var(--brand-text)" }} />
                       <div>
                         <span className="pg-meta-label">Participants</span>
                         <span className="pg-meta-value">Limited to {sel.participants}</span>
@@ -131,10 +153,10 @@ const ProgramsPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </m.div>
+              </div>
 
               {/* Content */}
-              <m.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="pg-detail-right">
+              <m.div initial={{ x: 20 }} animate={{ x: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="pg-detail-right">
                 <div className="pg-detail-badges">
                   {sel.isFeatured && <Badge sx={{ background: "#cd853f", color: "#1a0e05", fontWeight: 700, fontSize: "0.625rem" }}>Featured</Badge>}
                 </div>
@@ -143,7 +165,7 @@ const ProgramsPage: React.FC = () => {
 
                 {sel.modules && sel.modules.trim() && (
                   <div className="pg-modules">
-                    <h4 className="pg-modules-heading">Program Modules</h4>
+                    <h3 className="pg-modules-heading">Program Modules</h3>
                     <div className="pg-modules-list">
                       {sel.modules.split("\n").filter(Boolean).map((mod, i) => (
                         <m.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 + i * 0.05 }} className="pg-module">
@@ -155,13 +177,13 @@ const ProgramsPage: React.FC = () => {
                   </div>
                 )}
 
-                {sel.link && sel.link !== "," && (
-                  <m.button whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => window.open(sel.link, "_blank")} className="pg-btn-gold">
+                {safeUrl(sel.link) && (
+                  <m.button whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.97 }} onClick={() => openExternal(sel.link)} className="pg-btn-gold">
                     Register Now <ArrowOutwardIcon style={{ fontSize: "0.9375rem" }} />
                   </m.button>
                 )}
               </m.div>
-            </m.div>
+            </div>
           </div>
         </section>
       )}
@@ -177,13 +199,13 @@ const ProgramsPage: React.FC = () => {
           <div className="pg-grid">
             {otherPrograms.map((p, i) => (
               <m.div key={p.id} {...fadeUp} transition={del(i)}>
-                <div className="pg-card group" onClick={() => pick(p.id)}>
+                <div className="pg-card group" {...clickable(() => pick(p.id))}>
                   <div className="pg-card-img">
-                    <img loading="lazy" src={p.image || placeholderIcon} alt={p.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <img loading="lazy" decoding="async" {...(p.image ? responsiveImage(p.image, "(max-width: 768px) calc(100vw - 3rem), (max-width: 1024px) 45vw, 400px") : { src: placeholderIcon })} alt={p.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="pg-card-overlay">
                       <span className="pg-card-date">
                         <CalendarTodayIcon style={{ width: "0.6875rem", height: "0.6875rem" }} />
-                        {p.date ? new Date(p.date).toLocaleDateString() : "TBD"}
+                        {p.date ? formatDate(p.date) : "TBD"}
                       </span>
                       {p.location && (
                         <span className="pg-card-loc">
@@ -204,12 +226,21 @@ const ProgramsPage: React.FC = () => {
               </m.div>
             ))}
           </div>
+          <InfiniteScroll
+            hasMore={!!list.hasNextPage}
+            loading={list.isFetchingNextPage}
+            onLoadMore={() => void list.fetchNextPage()}
+            error={list.isFetchNextPageError ? list.error?.message : null}
+            loadedCount={programs.length}
+            total={total}
+            noun="programs"
+          />
         </div>
       </section>
 
       <style>{`
         .pg-loader { display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; gap: 0.75rem; }
-        .pg-spinner { width: 2rem; height: 2rem; border-radius: 50%; border: 2px solid #f0ebe4; border-top-color: #8b4513; animation: spin 0.8s linear infinite; }
+        .pg-spinner { width: 2rem; height: 2rem; border-radius: 50%; border: 2px solid var(--border); border-top-color: var(--brand-text); animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .pg-loader p { font-size: 0.8125rem; color: rgba(139,69,19,0.4); }
 
@@ -217,10 +248,10 @@ const ProgramsPage: React.FC = () => {
         .pg-hero { position: relative; background: #0f0906; overflow: hidden; padding: 4.5rem 0 4rem; }
         .pg-hero-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(15,9,6,0.92) 0%, rgba(61,30,8,0.8) 50%, rgba(139,69,19,0.55) 100%); }
         .pg-hero-title { font-size: clamp(1.75rem, 5vw, 3rem); font-weight: 700; color: #fff; line-height: 1.1; margin-bottom: 1rem; letter-spacing: -0.02em; }
-        .pg-hero-desc { font-size: clamp(0.8125rem, 2vw, 0.9375rem); color: rgba(255,255,255,0.5); max-width: 32rem; line-height: 1.75; }
+        .pg-hero-desc { font-size: clamp(0.8125rem, 2vw, 0.9375rem); color: rgba(255,255,255,0.68); max-width: 32rem; line-height: 1.75; }
 
         /* Detail section */
-        .pg-detail-section { padding: 3.5rem 0; background: #fff; }
+        .pg-detail-section { padding: 3.5rem 0; background: var(--surface); }
         .pg-detail { display: grid; grid-template-columns: 1fr 1.2fr; gap: 2.5rem; align-items: start; }
         .pg-detail-left {}
         .pg-detail-right {}
@@ -229,43 +260,43 @@ const ProgramsPage: React.FC = () => {
         .pg-detail-img img { width: 100%; height: 100%; object-fit: cover; }
 
         .pg-meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.625rem; margin-top: 1rem; }
-        .pg-meta-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 0.75rem; background: #faf8f5; border-radius: 0.5rem; border: 1px solid #f0ebe4; }
-        .pg-meta-label { display: block; font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.1em; color: #8b7355; font-weight: 600; font-family: 'DM Sans', sans-serif; }
-        .pg-meta-value { display: block; font-size: 0.8125rem; font-weight: 600; color: #1a0e05; }
+        .pg-meta-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.625rem 0.75rem; background: var(--page-alt); border-radius: 0.5rem; border: 1px solid var(--border); }
+        .pg-meta-label { display: block; font-size: 0.5625rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--soft); font-weight: 600; font-family: 'DM Sans', sans-serif; }
+        .pg-meta-value { display: block; font-size: 0.8125rem; font-weight: 600; color: var(--heading); }
 
         .pg-detail-badges { margin-bottom: 0.75rem; }
-        .pg-detail-title { font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 700; color: #1a0e05; line-height: 1.2; margin-bottom: 1rem; }
-        .pg-detail-desc { font-size: 0.9375rem; color: #52525b; line-height: 1.8; margin-bottom: 1.5rem; white-space: pre-line; }
+        .pg-detail-title { font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 700; color: var(--heading); line-height: 1.2; margin-bottom: 1rem; }
+        .pg-detail-desc { font-size: 0.9375rem; color: var(--text); line-height: 1.8; margin-bottom: 1.5rem; white-space: pre-line; }
 
         /* Modules */
-        .pg-modules { margin-bottom: 1.75rem; padding: 1.25rem; background: #faf8f5; border-radius: 0.75rem; border: 1px solid #f0ebe4; }
-        .pg-modules-heading { font-weight: 700; font-size: 0.875rem; color: #1a0e05; margin-bottom: 0.75rem; }
+        .pg-modules { margin-bottom: 1.75rem; padding: 1.25rem; background: var(--page-alt); border-radius: 0.75rem; border: 1px solid var(--border); }
+        .pg-modules-heading { font-weight: 700; font-size: 0.875rem; color: var(--heading); margin-bottom: 0.75rem; }
         .pg-modules-list { display: flex; flex-direction: column; gap: 0.5rem; }
         .pg-module { display: flex; align-items: flex-start; gap: 0.625rem; padding: 0.5rem 0; border-bottom: 1px solid rgba(240,235,228,0.6); }
         .pg-module:last-child { border-bottom: none; }
         .pg-module-num { font-size: 0.6875rem; font-weight: 700; color: #cd853f; font-family: 'DM Sans', sans-serif; flex-shrink: 0; min-width: 1.25rem; }
-        .pg-module-text { font-size: 0.8125rem; color: #52525b; line-height: 1.55; }
+        .pg-module-text { font-size: 0.8125rem; color: var(--text); line-height: 1.55; }
 
         .pg-btn-gold { display: inline-flex; align-items: center; gap: 0.375rem; background: #cd853f; color: #1a0e05; font-weight: 700; padding: 0.75rem 2rem; font-size: 0.8125rem; font-family: 'DM Sans', sans-serif; border-radius: 2rem; border: none; cursor: pointer; }
 
         /* Shared */
-        .pg-label { font-size: 0.6875rem; font-weight: 600; font-family: 'DM Sans', sans-serif; color: #b08968; letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.375rem; }
-        .pg-section-cream { padding: 3.5rem 0; background: #faf8f5; }
+        .pg-label { font-size: 0.6875rem; font-weight: 600; font-family: 'DM Sans', sans-serif; color: var(--label); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 0.375rem; }
+        .pg-section-cream { padding: 3.5rem 0; background: var(--page-alt); }
         .pg-section-header { text-align: center; margin-bottom: 2.5rem; }
-        .pg-heading { font-size: clamp(1.375rem, 3.5vw, 2.125rem); font-weight: 700; color: #1a0e05; margin-bottom: 0.375rem; }
-        .pg-sub { font-size: 0.875rem; color: #8b7355; max-width: 26rem; margin: 0 auto; }
+        .pg-heading { font-size: clamp(1.375rem, 3.5vw, 2.125rem); font-weight: 700; color: var(--heading); margin-bottom: 0.375rem; }
+        .pg-sub { font-size: 0.875rem; color: var(--soft); max-width: 26rem; margin: 0 auto; }
 
         /* Cards */
         .pg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-        .pg-card { border-radius: 0.75rem; overflow: hidden; cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); background: #fff; border: 1px solid #f0ebe4; height: 100%; display: flex; flex-direction: column; }
+        .pg-card { border-radius: 0.75rem; overflow: hidden; cursor: pointer; transition: all 0.3s cubic-bezier(0.4,0,0.2,1); background: var(--surface); border: 1px solid var(--border); height: 100%; display: flex; flex-direction: column; }
         .pg-card:hover { box-shadow: 0 12px 32px rgba(109,58,31,0.1); transform: translateY(-4px); }
         .pg-card-img { height: 11rem; overflow: hidden; position: relative; flex-shrink: 0; }
         .pg-card-overlay { position: absolute; bottom: 0; left: 0; right: 0; display: flex; gap: 0.625rem; padding: 0.5rem 0.75rem; background: rgba(0,0,0,0.5); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
         .pg-card-date, .pg-card-loc { display: flex; align-items: center; gap: 0.25rem; color: rgba(255,255,255,0.85); font-size: 0.625rem; font-family: 'DM Sans', sans-serif; font-weight: 500; }
         .pg-card-body { padding: 1rem; display: flex; flex-direction: column; flex: 1; }
-        .pg-card-title { font-size: 0.9375rem; font-weight: 700; color: #1a0e05; margin-bottom: 0.375rem; }
-        .pg-card-desc { font-size: 0.8125rem; color: #71717a; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0.75rem; flex: 1; }
-        .pg-card-link { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; font-weight: 600; color: #6d3a1f; font-family: 'DM Sans', sans-serif; transition: gap 0.2s; }
+        .pg-card-title { font-size: 0.9375rem; font-weight: 700; color: var(--heading); margin-bottom: 0.375rem; }
+        .pg-card-desc { font-size: 0.8125rem; color: var(--muted); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0.75rem; flex: 1; }
+        .pg-card-link { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 0.75rem; font-weight: 600; color: var(--brand-text); font-family: 'DM Sans', sans-serif; transition: gap 0.2s; }
         .pg-card:hover .pg-card-link { gap: 0.5rem; }
 
         /* Mobile */

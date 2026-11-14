@@ -1,0 +1,124 @@
+/*
+ * Colour tokens for light and dark mode.
+ * Light sections use these variables; hero, map and footer sections are dark in both themes.
+ * Every text token meets WCAG AA (4.5:1) against --page, --page-alt and --surface.
+ */
+:root {
+  color-scheme: light;
+  --page: #ffffff;
+  --page-alt: #faf8f5;
+  --surface: #ffffff;
+  --border: #f0ebe4;
+  --skeleton: #f0ebe4;
+  --heading: #1a0e05;
+  --text: #52525b;
+  --muted: #6b6b73;
+  --soft: #7a5c3e;
+  --label: #8f6a48;
+  --brand: #6d3a1f;
+  --brand-text: #6d3a1f;
+  --danger: #dc2626;
+  --danger-bg: #fef2f2;
+  --danger-border: #fecaca;
+  --success-bg: #f0fdf4;
+  --success-text: #15803d;
+  --success-border: #bbf7d0;
+  --nav-bg: #ffffff;
+  --nav-bg-scrolled: rgba(255, 255, 255, 0.85);
+  --nav-pill: #f9f5f0;
+  --nav-pill-scrolled: rgba(249, 245, 240, 0.6);
+  --nav-active: #ffffff;
+  --nav-hover: rgba(255, 255, 255, 0.5);
+  --focus: #b4621f;
+  --shadow: rgba(109, 58, 31, 0.08);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #120c08;
+  --page-alt: #19110b;
+  --surface: #21170f;
+  --border: #3a2b20;
+  --skeleton: #2c2118;
+  --heading: #f5ede4;
+  --text: #d9d0c6;
+  --muted: #b8ada1;
+  --soft: #c9b49a;
+  --label: #d9a877;
+  --brand: #6d3a1f;
+  --brand-text: #e3b48a;
+  --danger: #f87171;
+  --danger-bg: #2a1210;
+  --danger-border: #7f1d1d;
+  --success-bg: #0f2a1a;
+  --success-text: #86efac;
+  --success-border: #166534;
+  --nav-bg: #120c08;
+  --nav-bg-scrolled: rgba(18, 12, 8, 0.85);
+  --nav-pill: #21170f;
+  --nav-pill-scrolled: rgba(33, 23, 15, 0.7);
+  --nav-active: #3a2b20;
+  --nav-hover: rgba(255, 255, 255, 0.06);
+  --focus: #e3b48a;
+  --shadow: rgba(0, 0, 0, 0.4);
+}
+
+html,
+body {
+  background: var(--page);
+  color: var(--text);
+}
+
+/* Prerendered pages include the cookie banner; hide it unless the startup script says consent is missing. */
+html:not([data-needs-consent]) .cookie-banner { display: none !important; }
+
+/* While React takes over a prerendered page, keep visible content visible (scroll-reveal animations
+   would otherwise blank it for a moment). Removed on first scroll or after a few seconds. */
+html.pr-takeover #root [style*="opacity"] { opacity: 1 !important; }
+
+/* Brown logo is unreadable on dark backgrounds: render it light. */
+:root[data-theme="dark"] .site-logo {
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+/* Dark-mode fixes for MUI pieces styled with fixed colours. */
+:root[data-theme="dark"] .MuiAccordion-root {
+  background-color: var(--surface) !important;
+}
+
+/* Visible keyboard focus everywhere (mouse clicks do not show it). */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.map-marker:focus-visible circle:last-of-type {
+  stroke: #fff;
+  stroke-width: 2.5px;
+}
+
+/* Print: drop navigation and floating controls, keep content readable. */
+@media print {
+  header,
+  footer,
+  .skip-link,
+  .site-fab,
+  .scroll-progress,
+  .cookie-banner {
+    display: none !important;
+  }
+  :root,
+  :root[data-theme="dark"] {
+    --page: #fff;
+    --page-alt: #fff;
+    --surface: #fff;
+    --heading: #000;
+    --text: #222;
+    --muted: #444;
+  }
+  a[href^="http"]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+  }
+}

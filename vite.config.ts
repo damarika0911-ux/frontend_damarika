@@ -1,45 +1,95 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { createHash } from "node:crypto";
 
-export default defineConfig({
-  plugins: [
-    react(),
-    tailwindcss(),
-    {
-      name: "check-cloudflare-routing",
-      apply: "build",
-      writeBundle(options) {
-        const redirects = readFileSync(resolve(options.dir || "dist", "_redirects"), "utf8");
-        const hasRules = redirects.split(/\r?\n/).some((line) => {
-          const value = line.trim();
-          return value && !value.startsWith("#");
-        });
-        if (hasRules) {
-          this.error("Unexpected rules in dist/_redirects. Use the SPA fallback in wrangler.jsonc.");
+/** Image host for program/product/team photos (Supabase Storage). */
+const IMAGE_ORIGIN = "https://kofayxfcfyvzyapgipip.supabase.co";
+
+/**
+ * Faster first paint:
+ * - inline the (small) site CSS into index.html so no stylesheet request blocks rendering;
+ * - preconnect to the API and image hosts so their TLS handshakes start while JS downloads.
+ */
+function firstPaint(apiHost: string): Plugin {
+  return {
+    name: "first-paint",
+    apply: "build",
+    enforce: "post",
+    transformIndexHtml: {
+      order: "post",
+      handler(html, ctx) {
+        const origins = new Set<string>();
+        try { origins.add(new URL(apiHost).origin); } catch { /* relative API host */ }
+        origins.add(IMAGE_ORIGIN);
+        const preconnect = [...origins].map((o) => `<link rel="preconnect" href="${o}" crossorigin />`).join("\n  ");
+        html = html.replace("</title>", `</title>\n  ${preconnect}`);
+
+        for (const [fileName, chunk] of Object.entries(ctx.bundle ?? {})) {
+          if (chunk.type !== "asset" || !fileName.endsWith(".css")) continue;
+          const tag = new RegExp(`<link rel="stylesheet"[^>]*href="/${fileName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}"[^>]*>`);
+          if (!tag.test(html)) continue;
+          html = html.replace(tag, () => `<style>${String(chunk.source)}</style>`);
+          delete ctx.bundle![fileName];
         }
-        console.log("Cloudflare routing check passed: no custom redirect rules; using native SPA fallback.");
+        return html;
       },
     },
-  ],
-  build: {
-    target: "es2020",
-    cssMinify: "lightningcss",
-    sourcemap: false,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-mui": ["@mui/material", "@mui/icons-material"],
-          "vendor-motion": ["framer-motion"],
-          "vendor-utils": ["@tanstack/react-query", "zustand"],
+  };
+}
+
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), "VITE_");
+  const apiHost = env.VITE_DAMARIKA_API_HOST || "https://api.damarika.in/api/v2";
+  return {
+    plugins: [
+      react(),
+      tailwindcss(),
+      firstPaint(apiHost),
+      {
+        name: "check-cloudflare-routing",
+        apply: "build",
+        writeBundle(options) {
+          // React routes use the native SPA fallback in wrangler.jsonc. A _redirects catch-all would loop on Cloudflare.
+          if (existsSync(resolve(options.dir || "dist", "_redirects"))) {
+            this.error("Remove public/_redirects: routing uses the SPA fallback in wrangler.jsonc.");
+          }
+
+          // Every executable inline <script> in index.html must be allowed by its hash in _headers (CSP),
+          // otherwise browsers silently block it in production.
+          const dir = options.dir || "dist";
+          const html = readFileSync(resolve(dir, "index.html"), "utf8");
+          const headers = readFileSync(resolve(dir, "_headers"), "utf8");
+          for (const m of html.matchAll(/<script(\s[^>]*)?>([\s\S]*?)<\/script>/g)) {
+            const attrs = m[1] || "";
+            if (/\bsrc=/.test(attrs) || /application\/ld\+json/.test(attrs)) continue;
+            const hash = `'sha256-${createHash("sha256").update(m[2]).digest("base64")}'`;
+            if (!headers.includes(hash)) {
+              this.error(`An inline script in index.html is not allowed by the CSP. Add ${hash} to script-src in public/_headers.`);
+            }
+          }
+          console.log("CSP check passed: inline scripts match public/_headers.");
+        },
+      },
+    ],
+    build: {
+      target: "es2020",
+      cssMinify: "lightningcss",
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          // MUI is left out on purpose so Rollup can split it per page (e.g. the search dialog loads only when opened).
+          manualChunks: {
+            "vendor-react": ["react", "react-dom", "react-router-dom"],
+            "vendor-utils": ["@tanstack/react-query", "zustand"],
+          },
         },
       },
     },
-  },
-  server: {
-    open: true,
-  },
+    server: {
+      open: true,
+    },
+  };
 });

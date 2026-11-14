@@ -3,7 +3,7 @@
 const shimmer = `@keyframes sk-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }`;
 
 const Bar = ({ w = "100%", h = "0.75rem", mb = "0" }: { w?: string; h?: string; mb?: string }) => (
-  <div style={{ width: w, height: h, borderRadius: "0.375rem", background: "#f0ebe4", animation: "sk-pulse 1.4s ease-in-out infinite", marginBottom: mb }} />
+  <div style={{ width: w, height: h, borderRadius: "0.375rem", background: "var(--skeleton)", animation: "sk-pulse 1.4s ease-in-out infinite", marginBottom: mb }} />
 );
 
 const DarkBar = ({ w = "100%", h = "0.75rem", mb = "0" }: { w?: string; h?: string; mb?: string }) => (
@@ -11,7 +11,7 @@ const DarkBar = ({ w = "100%", h = "0.75rem", mb = "0" }: { w?: string; h?: stri
 );
 
 const ImgBlock = ({ ratio = "16/10" }: { ratio?: string }) => (
-  <div style={{ aspectRatio: ratio, borderRadius: "0.75rem", background: "#f0ebe4", animation: "sk-pulse 1.4s ease-in-out infinite" }} />
+  <div style={{ aspectRatio: ratio, borderRadius: "0.75rem", background: "var(--skeleton)", animation: "sk-pulse 1.4s ease-in-out infinite" }} />
 );
 
 /** Full page skeleton — used in App.tsx Suspense */
@@ -36,15 +36,15 @@ const Loader = () => (
       </div>
     </div>
     {/* Cards skeleton */}
-    <div style={{ padding: "2rem 2.5rem", background: "#faf8f5" }}>
+    <div style={{ padding: "2rem 2.5rem", background: "var(--page-alt)" }}>
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
         <Bar w="5rem" h="0.5rem" mb="0.5rem" />
         <Bar w="12rem" h="1.125rem" />
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "1.25rem" }}>
         {[0, 1, 2].map((i) => (
-          <div key={i} style={{ borderRadius: "0.75rem", border: "1px solid #f0ebe4", overflow: "hidden" }}>
-            <div style={{ height: "10rem", background: "#f0ebe4", animation: "sk-pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.15}s` }} />
+          <div key={i} style={{ borderRadius: "0.75rem", border: "1px solid var(--border)", overflow: "hidden" }}>
+            <div style={{ height: "10rem", background: "var(--skeleton)", animation: "sk-pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.15}s` }} />
             <div style={{ padding: "1rem" }}>
               <Bar w="75%" h="0.875rem" mb="0.5rem" />
               <Bar w="100%" h="0.5rem" mb="0.375rem" />
@@ -67,8 +67,8 @@ export const InlineSkeleton = ({ cards = 3, cols = 3 }: { cards?: number; cols?:
   <>
     <div style={{ display: "grid", gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: "1.25rem" }} className="sk-inline-grid">
       {Array.from({ length: cards }).map((_, i) => (
-        <div key={i} style={{ borderRadius: "0.75rem", border: "1px solid #f0ebe4", overflow: "hidden" }}>
-          <div style={{ height: "10rem", background: "#f0ebe4", animation: "sk-pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.12}s` }} />
+        <div key={i} style={{ borderRadius: "0.75rem", border: "1px solid var(--border)", overflow: "hidden" }}>
+          <div style={{ height: "10rem", background: "var(--skeleton)", animation: "sk-pulse 1.4s ease-in-out infinite", animationDelay: `${i * 0.12}s` }} />
           <div style={{ padding: "1rem" }}>
             <Bar w="75%" h="0.875rem" mb="0.5rem" />
             <Bar w="100%" h="0.5rem" mb="0.375rem" />
