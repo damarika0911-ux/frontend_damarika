@@ -22,5 +22,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  // Type-check the app starting from its entry point (plus everything it imports), not every file in src/.
+  // A stale or leftover file (e.g. restored from a CI build cache) can then never break the build.
+  "files": ["src/main.tsx", "src/vite-env.d.ts"]
 }
