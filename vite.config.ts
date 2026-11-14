@@ -1,7 +1,7 @@
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 
@@ -52,9 +52,17 @@ export default defineConfig(({ mode }) => {
         name: "check-cloudflare-routing",
         apply: "build",
         writeBundle(options) {
-          // React routes use the native SPA fallback in wrangler.jsonc. A _redirects catch-all would loop on Cloudflare.
-          if (existsSync(resolve(options.dir || "dist", "_redirects"))) {
-            this.error("Remove public/_redirects: routing uses the SPA fallback in wrangler.jsonc.");
+          // React routes use the native SPA fallback in wrangler.jsonc. A _redirects file with real rules
+          // (e.g. a catch-all to /index.html) makes Cloudflare loop, so fail on that. A comments-only file is
+          // harmless; it can be left behind by a CI build cache, so just remove it.
+          const redirects = resolve(options.dir || "dist", "_redirects");
+          if (existsSync(redirects)) {
+            const rules = readFileSync(redirects, "utf8").split(/\r?\n/).map((l) => l.trim()).filter((l) => l && !l.startsWith("#"));
+            if (rules.length) {
+              this.error(`_redirects contains rules (${rules[0]}). Remove them: routing uses the SPA fallback in wrangler.jsonc.`);
+            }
+            rmSync(redirects);
+            console.log("Removed a leftover comments-only _redirects file.");
           }
 
           // Every executable inline <script> in index.html must be allowed by its hash in _headers (CSP),
