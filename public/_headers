@@ -9,5 +9,5 @@
   Cross-Origin-Opener-Policy: same-origin
   Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-1Z3F/awiuk/CJFu3ch62VjJyhOBanZ8bh76/XRqbiCQ=' https://www.googletagmanager.com https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https:; connect-src 'self' https://cloudflareinsights.com https://api.damarika.in https://backend-damarkia.onrender.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com; frame-src https://www.google.com; frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
 
-/assets/*
-  Cache-Control: public, max-age=31536000, immutable
+# No long-lived cache rule for /assets/*: when a file is missing, Cloudflare answers with index.html, and a
+# 1-year "immutable" header made browsers keep that HTML as the CSS/JS file. Cloudflare default (revalidate) is safe.

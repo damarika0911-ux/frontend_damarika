@@ -102,6 +102,11 @@ export default defineConfig(({ mode }) => {
       sourcemap: false,
       rollupOptions: {
         output: {
+          // "-r2" gives every file a new URL. Browsers that cached an HTML page as a CSS/JS file during the
+          // 14 Nov broken deploy (1-year cache) then fetch fresh files instead of reusing the bad copy.
+          entryFileNames: "assets/[name]-[hash]-r2.js",
+          chunkFileNames: "assets/[name]-[hash]-r2.js",
+          assetFileNames: "assets/[name]-[hash]-r2[extname]",
           // MUI is left out on purpose so Rollup can split it per page (e.g. the search dialog loads only when opened).
           manualChunks: {
             "vendor-react": ["react", "react-dom", "react-router-dom"],
